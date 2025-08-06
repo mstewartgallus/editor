@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import styles from "./Editor.module.css";
 
 const Editor = () => 
