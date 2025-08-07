@@ -5,17 +5,10 @@
     padding-inline: 1ch;
 }
 
-.filesWrapper {
-    position: relative;
-}
-.filesContent {
-    background: white;
-}
-.files {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    z-index: -1000;
+.scrollbox {
+    max-block-size: 100vh;
+    max-inline-size: 100vw;
+    overflow: scroll;
+    scrollbar-color: black white;
+    scrollbar-width: thin;
 }

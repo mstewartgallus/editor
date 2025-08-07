@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+    useCallback, useEffect, useId, useMemo, useRef, useReducer
+} from "react";
 import {
     MenuList, MenuItem,
     Disclosure, DisclosureButton, DisclosureContents
@@ -10,55 +12,111 @@ import TextBox from "../TextBox";
 
 import styles from "./Editor.module.css";
 
-const useObjectURL = (blob?: Blob) => {
-    const [url, setURL] = useState<string | null>(null);
-    useEffect(() => {
-        if (!blob) {
-            setURL(null);
-            return;
-        }
-        const url = URL.createObjectURL(blob);
-        setURL(url);
-        return () => URL.revokeObjectURL(url);
-    }, [blob]);
-    return url;
+const chooseFile = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    await new Promise<void>((res, rej) => {
+        input.onchange = () => {
+            res();
+        };
+        input.click();
+    });
+    const files = input.files;
+    if (!files) {
+        return [];
+    }
+    return [...files];
 };
 
+const readFileAsText = async (file: File) => {
+    const reader = new FileReader();
+    await new Promise<void>((res, rej) => {
+        reader.onload = () => res();
+        reader.onerror = () => rej();
+        reader.readAsText(file);
+    });
+    return reader.result as string;
+};
+
+const download = (blob: Blob, download?: string) => {
+    const href = URL.createObjectURL(blob);
+    try {
+        const anchor = document.createElement('a');
+        anchor.href = href;
+        if (download) {
+            anchor.download = download;
+        }
+        anchor.click();
+    } finally {
+        URL.revokeObjectURL(href);
+    }
+};
+
+interface State {
+    name: string | null;
+    value: string | null;
+}
+
+interface ChooseFileAction {
+    type: 'chooseFile';
+    name: string;
+}
+
+interface ReadFileAction {
+    type: 'readFile';
+    result: string;
+}
+
+type Action = ChooseFileAction | ReadFileAction;
+
+const initialState: State = {
+    name: null,
+    value: null
+};
+
+const reducer = (state: State, action: Action) => {
+    switch (action.type) {
+        case 'chooseFile': {
+            const { name } = action;
+            return { ...state, name, value: null };
+        }
+        case 'readFile': {
+            const { result } = action;
+            return { ...state, value: result };
+        }
+    }
+};
+
+const chooseFileAction: (name: string) => ChooseFileAction
+    = (name: string) => ({ type: 'chooseFile', name });
+
+const readFileAction: (result: string) => ReadFileAction
+    = (result: string) => ({ type: 'readFile', result });
+
 const Editor = () => {
-    const [file, setFile] = useState<File | null>(null);
-    const [value, setValue] = useState<string | null>(null);
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const { name, value } = state;
 
     const fileRef = useRef<HTMLInputElement>(null);
-    const onChange = useCallback(async () => {
-        const files = fileRef.current!.files;
-        if (!files || files.length == 0) {
-            return;
-        }
 
-        const file = files[0];
-        setFile(file);
-        setValue(null);
+    const title = name ?? 'No File';
 
-        const reader = new FileReader();
-
-        await new Promise<void>((res, rej) => {
-            reader.onload = () => res();
-            reader.onerror = () => rej();
-            reader.readAsText(file);
-        });
-
-        setValue(reader.result as string);
-    }, []);
-
-    const blob = useMemo(() => {
+    const downloadAction = useCallback(() => {
         if (!value) {
             return;
         }
-        return new Blob([value]);
-    }, [value]);
-    const url = useObjectURL(blob);
+        download(new Blob([value]), title);
+    }, [value, title]);
 
-    const title = file?.name ?? 'No File';
+    const uploadAction = useCallback(async () => {
+        const file = (await chooseFile())[0];
+
+        dispatch(chooseFileAction(file.name));
+
+        const result = await readFileAsText(file);
+
+        dispatch(readFileAction(result));
+    }, []);
 
     const h1Id = useId();
     const disclosureButtonId = useId();
@@ -77,23 +135,20 @@ const Editor = () => {
                         <DisclosureContents>
                             <MenuList>
                                 <MenuItem>
-                                    <div className={styles.filesWrapper}>
-                                       <label>
-                                            <div className={styles.filesContent}>Upload</div>
-                                            <input className={styles.files} ref={fileRef} onChange={onChange} type="file" />
-                                       </label>
-                                   </div>
+                                    <button onClick={uploadAction}>Upload</button>
                                 </MenuItem>
                                 <MenuItem>
-                                   <a href={url ?? undefined} download={title}>Download</a>
+                                    <button disabled={!value} onClick={downloadAction}>Download</button>
                                 </MenuItem>
                             </MenuList>
                         </DisclosureContents>
                     </Disclosure>
                 </section>
                 }
-            >
-              <TextBox value={value ?? ''} />
+        >
+              <div className={styles.scrollbox}>
+                 <TextBox value={value ?? ''} />
+              </div>
             </Layout>
         </main>;
 };
