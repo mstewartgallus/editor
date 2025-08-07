@@ -1,0 +1,11 @@
+.editor {
+    min-block-size: 8em;
+}
+.editorWrapper {
+    position: relative;
+}
+.menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
