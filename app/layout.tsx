@@ -9,10 +9,8 @@ interface Props {
 const RootLayout = ({ children }: Props) =>
     <html lang="en">
         <body>
-            <main>
-               {children}
-            </main>
-         </body>
+            {children}
+        </body>
     </html>;
 
 export default RootLayout;
