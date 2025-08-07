@@ -1,4 +1,5 @@
 .textBox {
     min-block-size: 8em;
     white-space: pre-wrap;
+    font-family: monospace;
 }
