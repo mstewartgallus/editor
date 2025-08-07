@@ -83,6 +83,11 @@ export const fromString = (value: string) => {
     return { before: '', selection: '', after: value };
 };
 
+export const fromArrayBuffer = (buffer: ArrayBuffer) => {
+    const textDecoder = new TextDecoder();
+    return fromString(textDecoder.decode(buffer));
+};
+
 export const toBlob = ({ before, selection, after }: Readonly<Buffer>) => {
     return new Blob([before, selection, after]);
 };

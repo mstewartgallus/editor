@@ -30,15 +30,6 @@ const chooseFile = async () => {
     return [...files];
 };
 
-const readFileAsText = async (file: File) => {
-    const reader = new FileReader();
-    await new Promise<void>((res, rej) => {
-        reader.onloadend = () => res();
-        reader.onerror = () => rej();
-        reader.readAsText(file);
-    });
-    return reader.result as string;
-};
 
 const download = (blob: Blob, download?: string) => {
     const href = URL.createObjectURL(blob);
@@ -67,7 +58,7 @@ interface ChooseFileAction {
 
 interface ReadFileAction {
     type: 'readFile';
-    result: string;
+    result: ArrayBuffer;
 }
 
 interface InputAction {
@@ -129,7 +120,7 @@ const reducer: (state: State, action: Action) => State = (state: State, action: 
 
         case 'readFile': {
             const { result } = action;
-            return { ...state, loading: false, value: Buf.fromString(result) };
+            return { ...state, loading: false, value: Buf.fromArrayBuffer(result) };
         }
 
         case 'input': {
@@ -185,8 +176,8 @@ const reducer: (state: State, action: Action) => State = (state: State, action: 
 const chooseFileAction: (name: string) => ChooseFileAction
     = (name: string) => ({ type: 'chooseFile', name });
 
-const readFileAction: (result: string) => ReadFileAction
-    = (result: string) => ({ type: 'readFile', result });
+const readFileAction: (result: ArrayBuffer) => ReadFileAction
+    = (result: ArrayBuffer) => ({ type: 'readFile', result });
 
 const inputAction: (result: string) => InputAction
     = (data: string) => ({ type: 'input', data });
@@ -217,7 +208,7 @@ const Editor = () => {
 
         dispatch(chooseFileAction(file.name));
 
-        const result = await readFileAsText(file);
+        const result = await file.arrayBuffer();
 
         dispatch(readFileAction(result));
     }, []);
@@ -250,6 +241,15 @@ const Editor = () => {
     const h1Id = useId();
     const disclosureButtonId = useId();
 
+    const len = 200;
+    const view = useMemo(() => {
+        const { before, selection, after } = value;
+        return {
+            before: before.substring(before.lastIndexOf('\n', before.length - len)),
+            selection,
+            after: after.substring(0, after.indexOf('\n', len))
+        };
+    }, [value, len]);
     return <main aria-describedby={h1Id}>
         <title>{title}</title>
         <Layout
@@ -275,15 +275,13 @@ const Editor = () => {
                 </section>
                 }
         >
-              <div className={styles.scrollbox}>
               <TextBox
                      disabled={loading}
-                     value={value}
+                     value={view}
                      inputAction={inputActionDispatch} backspaceAction={backspaceActionDispatch}
                      selectAction={selectActionDispatch} selectLeftAction={selectLeftAction} selectRightAction={selectRightAction}
                      caretLeftAction={caretLeftAction} caretRightAction={caretRightAction}
               />
-              </div>
             </Layout>
         </main>;
 };

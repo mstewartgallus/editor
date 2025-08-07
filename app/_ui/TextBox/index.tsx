@@ -92,11 +92,9 @@ const TextBox = ({
         }
     }, [caretLeftAction, caretRightAction, selectAction, selectLeftAction, selectRightAction]);
 
-    return <div
-           role="textbox"
-           onClick={onClick}
-           className={styles.textBox}
-        >
+    return <div role="textbox" className={styles.textBox} onClick={onClick}>
+        <div>...</div>
+        <div>
         <span>{before}</span>
         <span ref={selectionStartRef} />
         <span className={styles.selection}>
@@ -111,7 +109,9 @@ const TextBox = ({
         </span>
         <span ref={selectionEndRef} />
         <span>{after}</span>
-    </div>;
+        </div>
+        <div>...</div>
+        </div>;
 };
 
 export default TextBox;

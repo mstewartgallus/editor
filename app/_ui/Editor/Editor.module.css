@@ -5,10 +5,3 @@
     padding-inline: 1ch;
 }
 
-.scrollbox {
-    block-size: 100vh;
-    inline-size: 100vw;
-    overflow: scroll;
-    scrollbar-color: black white;
-    scrollbar-width: thin;
-}
