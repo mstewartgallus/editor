@@ -6,7 +6,7 @@ const manifest: () => MetadataRoute.Manifest = () => ({
     name: 'Editor',
     short_name: 'Editor',
     description: 'A minimalist editor',
-    start_url: process.env.PAGES_BASE_PATH,
+    scope: process.env.PAGES_BASE_PATH,
     display: 'standalone',
     background_color: '#000000',
     theme_color: '#000000',
