@@ -3,7 +3,7 @@
 import type Buffer from "@/lib/Buffer";
 import * as Buf from "@/lib/Buffer";
 import {
-    useCallback, useEffect, useId, useMemo, useRef, useReducer
+    useCallback, useId, useReducer
 } from "react";
 import {
     MenuList, MenuItem,
@@ -17,7 +17,7 @@ import styles from "./Editor.module.css";
 const chooseFile = async () => {
     const input = document.createElement('input');
     input.type = 'file';
-    await new Promise<void>((res, rej) => {
+    await new Promise<void>((res) => {
         input.onchange = () => {
             res();
         };
@@ -198,8 +198,6 @@ const Editor = () => {
         name, value
     } = state;
 
-    const fileRef = useRef<HTMLInputElement>(null);
-
     const title = name ?? 'No File';
 
     const downloadAction = useCallback(() => {
@@ -251,36 +249,15 @@ const Editor = () => {
     const h1Id = useId();
     const disclosureButtonId = useId();
 
-    const len = 2000;
-    // // FIXME use deferred value?
-    // const view = useMemo(() => {
-    //     let { before, after } = value;
-    //     let beforeIndex = before.lastIndexOf('\n', before.length - len);
-    //     if (beforeIndex < 0) {
-    //         beforeIndex = 0;
-    //     }
-    //     if (beforeIndex > 0) {
-    //         beforeIndex += 1;
-    //     }
-    //     let afterIndex = after.indexOf('\n', len);
-    //     if (afterIndex < 0) {
-    //         afterIndex = len;
-    //     }
-    //     before = before.substring(beforeIndex);
-    //     after = after.substring(0, afterIndex);
-    //     return { before, after };
-    // }, [value, len]);
-
     const { before, after } = value;
-    let lineStart = before.lastIndexOf('\n');
-    let lineEnd = after.indexOf('\n');
+    const lineStart = before.lastIndexOf('\n');
+    const lineEnd = after.indexOf('\n');
 
     const beforeLine = before.substring(0, lineStart + 1);
     const afterLine = after.substring(lineEnd + 1);
 
-    let beforeCursor = before.substring(lineStart + 1);
+    const beforeCursor = before.substring(lineStart + 1);
     let afterCursor = after.substring(0, lineEnd);
-
     if (afterCursor === '') {
         afterCursor = ' ';
     }

@@ -3,7 +3,7 @@
 import type { KeyboardEvent, InputEvent } from "react";
 import type Screen from "@/lib/Screen";
 import * as Scr from "@/lib/Screen";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import styles from "./TextBox.module.css";
 
@@ -56,7 +56,7 @@ const TextBox = ({
     const onBeforeInput = useCallback((event: InputEvent<HTMLSpanElement>) => {
         event.preventDefault();
         inputAction?.(event.data);
-    }, [value, inputAction]);
+    }, [inputAction]);
 
     const onClick = useCallback(() => {
         cursorRef.current!.focus();
@@ -106,6 +106,7 @@ const TextBox = ({
                 break;
         }
     }, [
+        backspaceAction,
         caretUpAction, caretDownAction,
         caretLeftAction, caretRightAction,
         selectLeftAction, selectRightAction
@@ -123,7 +124,7 @@ const TextBox = ({
         <div className={styles.currentLine}>
                  {beforeCursor}
                  <span className={styles.cursor} ref={cursorRef}
-                     contentEditable={true} suppressContentEditableWarning={true}
+                     contentEditable={!disabled} suppressContentEditableWarning={true}
                      onBeforeInput={onBeforeInput}
                      onKeyDown={onKeyDown}
                      onFocus={onFocus} onBlur={onBlur}
