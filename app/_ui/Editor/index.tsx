@@ -1,6 +1,7 @@
 "use client";
 
 import type Buffer from "@/lib/Buffer";
+import type Screen from "@/lib/Screen";
 import * as Buf from "@/lib/Buffer";
 import {
     useCallback, useId, useReducer
