@@ -1,5 +1,7 @@
 "use client";
 
+import type Buffer from "@/lib/Buffer";
+import * as Buf from "@/lib/Buffer";
 import {
     useCallback, useEffect, useId, useMemo, useRef, useReducer
 } from "react";
@@ -31,7 +33,7 @@ const chooseFile = async () => {
 const readFileAsText = async (file: File) => {
     const reader = new FileReader();
     await new Promise<void>((res, rej) => {
-        reader.onload = () => res();
+        reader.onloadend = () => res();
         reader.onerror = () => rej();
         reader.readAsText(file);
     });
@@ -55,9 +57,7 @@ const download = (blob: Blob, download?: string) => {
 interface State {
     loading: boolean;
     name: string | null;
-    value: string;
-    selectionStart: number;
-    selectionEnd: number;
+    value: Buffer;
 }
 
 interface ChooseFileAction {
@@ -75,32 +75,47 @@ interface InputAction {
     data: string;
 }
 
+interface BackspaceAction {
+    type: 'backspace';
+}
+
+interface CaretLeftAction {
+    type: 'caretLeft';
+}
+
+interface CaretRightAction {
+    type: 'caretRight';
+}
+
+interface SelectLeftAction {
+    type: 'selectLeft';
+}
+
+interface SelectRightAction {
+    type: 'selectRight';
+}
+
 interface SelectAction {
     type: 'select';
     selectionStart: number;
     selectionEnd: number;
 }
 
-interface BackspaceAction {
-    type: 'backspace';
-}
-
 type Action =
     | ChooseFileAction
     | ReadFileAction
     | InputAction
-    | SelectAction
-    | BackspaceAction;
+    | BackspaceAction
+    | CaretLeftAction | CaretRightAction
+    | SelectAction | SelectLeftAction | SelectRightAction;
 
 const initialState: State = {
     loading: false,
     name: null,
-    value: '',
-    selectionStart: 0,
-    selectionEnd: 0
+    value: Buf.empty
 };
 
-const reducer = (state: State, action: Action) => {
+const reducer: (state: State, action: Action) => State = (state: State, action: Action) => {
     switch (action.type) {
         case 'chooseFile': {
             const { name } = action;
@@ -108,51 +123,62 @@ const reducer = (state: State, action: Action) => {
                 ...state,
                 loading: true,
                 name,
-                value: '', selectionStart: 0, selectionEnd: 0
+                value: Buf.empty
             };
         }
 
         case 'readFile': {
             const { result } = action;
-            return { ...state, loading: false, value: result };
+            return { ...state, loading: false, value: Buf.fromString(result) };
         }
 
         case 'input': {
-            let { selectionStart, selectionEnd, value } = state;
+            const { value } = state;
             const { data } = action;
-
-            value = value.substring(0, selectionStart) + data + value.substring(selectionEnd);
-            selectionStart += data.length;
-            selectionEnd = selectionStart;
-
             return {
                 ...state,
-                value,
-                selectionStart, selectionEnd
+                value: Buf.insert(value, data)
             };
         }
 
         case 'select': {
+            const { value } = state;
             const { selectionStart, selectionEnd } = action;
             return {
                 ...state,
-                selectionStart, selectionEnd
+                value: Buf.select(value, selectionStart, selectionEnd)
             };
         }
 
-        case 'backspace': {
-            let { selectionStart, selectionEnd, value } = state;
-
-            selectionStart -= 1;
-            value = value.substring(0, selectionStart) + value.substring(selectionEnd);
-            selectionEnd = selectionStart;
-
+        case 'caretLeft':
             return {
                 ...state,
-                value,
-                selectionStart, selectionEnd
+                value: Buf.caretLeft(state.value)
             };
-        }
+
+        case 'caretRight':
+            return {
+                ...state,
+                value: Buf.caretRight(state.value)
+            };
+
+        case 'selectLeft':
+            return {
+                ...state,
+                value: Buf.selectLeft(state.value)
+            };
+
+        case 'selectRight':
+            return {
+                ...state,
+                value: Buf.selectRight(state.value)
+            };
+
+        case 'backspace':
+            return {
+                ...state,
+                value: Buf.deleteBackwards(state.value)
+            };
     }
 };
 
@@ -172,8 +198,7 @@ const Editor = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const {
         loading,
-        name, value,
-        selectionStart, selectionEnd
+        name, value
     } = state;
 
     const fileRef = useRef<HTMLInputElement>(null);
@@ -184,7 +209,7 @@ const Editor = () => {
         if (!value) {
             return;
         }
-        download(new Blob([value]), title);
+        download(Buf.toBlob(value), title);
     }, [value, title]);
 
     const uploadAction = useCallback(async () => {
@@ -201,12 +226,25 @@ const Editor = () => {
         dispatch(inputAction(data));
     }, []);
 
+    const backspaceActionDispatch = useCallback(async () => {
+        dispatch({ type: 'backspace' });
+    }, []);
+
     const selectActionDispatch = useCallback(async (selectionStart: number, selectionEnd: number) => {
         dispatch(selectAction(selectionStart, selectionEnd));
     }, []);
+    const selectLeftAction = useCallback(async () => {
+        dispatch({ type: 'selectLeft' });
+    }, []);
+    const selectRightAction = useCallback(async () => {
+        dispatch({ type: 'selectRight' });
+    }, []);
 
-    const backspaceActionDispatch = useCallback(async () => {
-        dispatch({ type: 'backspace' });
+    const caretLeftAction = useCallback(async () => {
+        dispatch({ type: 'caretLeft' });
+    }, []);
+    const caretRightAction = useCallback(async () => {
+        dispatch({ type: 'caretRight' });
     }, []);
 
     const h1Id = useId();
@@ -229,7 +267,7 @@ const Editor = () => {
                                    <button disabled={loading} onClick={uploadAction}>Upload</button>
                                 </MenuItem>
                                 <MenuItem>
-                                    <button disabled={!value} onClick={downloadAction}>Download</button>
+                                    <button onClick={downloadAction}>Download</button>
                                 </MenuItem>
                             </MenuList>
                         </DisclosureContents>
@@ -240,11 +278,11 @@ const Editor = () => {
               <div className={styles.scrollbox}>
               <TextBox
                      disabled={loading}
-                     value={value ?? ''}
-                     selectionStart={selectionStart} selectionEnd={selectionEnd}
-                     inputAction={inputActionDispatch} selectAction={selectActionDispatch}
-                     backspaceAction={backspaceActionDispatch}
-                 />
+                     value={value}
+                     inputAction={inputActionDispatch} backspaceAction={backspaceActionDispatch}
+                     selectAction={selectActionDispatch} selectLeftAction={selectLeftAction} selectRightAction={selectRightAction}
+                     caretLeftAction={caretLeftAction} caretRightAction={caretRightAction}
+              />
               </div>
             </Layout>
         </main>;

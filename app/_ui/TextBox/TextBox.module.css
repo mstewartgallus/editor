@@ -4,3 +4,10 @@
     font-family: monospace;
     caret-color: blue;
 }
+
+.selection {
+    background: lightblue;
+}
+
+.cursor {
+}
