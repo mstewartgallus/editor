@@ -2,7 +2,9 @@
     min-block-size: 8em;
     white-space: pre-wrap;
     font-family: monospace;
-    caret-color: blue;
+    overflow: hidden;
+    block-size: 100vh;
+    inline-size: 100wh;
 }
 
 .selection {
@@ -10,4 +12,31 @@
 }
 
 .cursor {
+    color: blue;
+}
+
+.currentLine {
+    background: yellow;
+}
+
+.textBox {
+    position: relative;
+}
+.contents {
+    position: absolute;
+    top: 70%;
+    left: 0;
+    right: 0;
+}
+.afterLine {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: flex;
+}
+.beforeLine {
+    position: absolute;
+    display: flex;
+    bottom: 100%;
+    left: 0;
 }

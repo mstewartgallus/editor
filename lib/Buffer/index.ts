@@ -1,86 +1,68 @@
 export default interface Buffer {
     before: string;
-    selection: string;
     after: string;
 }
 
 export const empty: Readonly<Buffer> = {
     before: '',
-    selection: '',
     after: ''
 };
 
-export const insert = ({ before, selection, after }: Readonly<Buffer>, data: string) => {
+export const insert = ({ before, after }: Readonly<Buffer>, data: string) => {
     return {
         before: before + data,
-        selection: '',
         after
     };
 };
 
 // FIXME...
-export const deleteBackwards = ({ before, selection, after }: Readonly<Buffer>) => {
-    if (selection === '') {
-        before = before.substring(0, before.length - 1);
-    }
+export const deleteBackwards = ({ before, after }: Readonly<Buffer>) => {
     return {
-        before,
-        selection: '',
+        before: before.substring(0, before.length - 1),
         after
     };
 };
 
 export const caretLeft = (
-    { before, selection, after }: Readonly<Buffer>
+    { before, after }: Readonly<Buffer>
 ) => {
     return {
         before: before.substring(0, before.length - 1),
-        selection: '',
-        after: before.substring(before.length - 1) + selection + after
+        after: before.substring(before.length - 1) + after
     };
 };
 
 export const caretRight = (
-    { before, selection, after }: Readonly<Buffer>
+    { before, after }: Readonly<Buffer>
 ) => {
     return {
-        before: before + selection + after.substring(0, 1),
-        selection: '',
+        before: before + after.substring(0, 1),
         after: after.substring(1)
     };
 };
 
-export const select = (
-    { before, selection, after }: Readonly<Buffer>,
-    selectionStart: number, selectionEnd: number
+export const caretUp = (
+    { before, after }: Readonly<Buffer>
 ) => {
-    // FIXME... ick
-    const value = before + selection + after;
+    const index = before.lastIndexOf('\n', before.length);
     return {
-        before: value.substring(0, selectionStart),
-        selection: value.substring(selectionStart, selectionEnd),
-        after: value.substring(selectionEnd)
+        before: before.substring(0, index),
+        after: before.substring(index) + after
     };
 };
 
-export const selectLeft = ({ before, selection, after }: Readonly<Buffer>) => {
+export const caretDown = (
+    { before, after }: Readonly<Buffer>
+) => {
+    const index = after.indexOf('\n', 1);
     return {
-        before: before.substring(0, before.length - 1),
-        selection: before.substring(before.length - 1) + selection,
-        after
-    };
-};
-
-export const selectRight = ({ before, selection, after }: Readonly<Buffer>) => {
-    return {
-        before,
-        selection: selection + after.substring(0, 1),
-        after: after.substring(1)
+        before: before + after.substring(0, index),
+        after: after.substring(index)
     };
 };
 
 export const fromString = (value: string) => {
-    return { before: '', selection: '', after: value };
+    return { before: '', after: value };
 };
 
 export const fromArrayBuffer = (buffer: ArrayBuffer) => {
@@ -88,6 +70,6 @@ export const fromArrayBuffer = (buffer: ArrayBuffer) => {
     return fromString(textDecoder.decode(buffer));
 };
 
-export const toBlob = ({ before, selection, after }: Readonly<Buffer>) => {
-    return new Blob([before, selection, after]);
+export const toBlob = ({ before, after }: Readonly<Buffer>) => {
+    return new Blob([before, after]);
 };

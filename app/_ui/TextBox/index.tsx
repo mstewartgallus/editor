@@ -18,9 +18,11 @@ interface Props {
     caretLeftAction: () => Promise<void>;
     caretRightAction: () => Promise<void>;
 
+    caretUpAction: () => Promise<void>;
+    caretDownAction: () => Promise<void>;
+
     selectLeftAction: () => Promise<void>;
     selectRightAction: () => Promise<void>;
-    selectAction: (selectionStart: number, selectionEnd: number) => Promise<void>;
 }
 
 const TextBox = ({
@@ -34,15 +36,15 @@ const TextBox = ({
     caretLeftAction,
     caretRightAction,
 
+    caretUpAction,
+    caretDownAction,
+
     selectLeftAction,
-    selectRightAction,
-    selectAction
+    selectRightAction
 }: Props) => {
-    const { before, selection, after } = value;
+    const { before, after } = value;
 
     const cursorRef = useRef<HTMLSpanElement>(null);
-    const selectionStartRef = useRef<HTMLSpanElement>(null);
-    const selectionEndRef = useRef<HTMLSpanElement>(null);
 
     const onBeforeInput = useCallback((event: InputEvent<HTMLSpanElement>) => {
         event.preventDefault();
@@ -55,17 +57,23 @@ const TextBox = ({
 
     const onKeyDown = useCallback((event: KeyboardEvent<HTMLSpanElement>) => {
         switch (event.key) {
-                // FIXME Not sure how to calculate line by line
-            case 'ArrowDown':
-                event.preventDefault();
-                break;
-            case 'ArrowUp':
-                event.preventDefault();
-                break;
-
             case 'Backspace':
                 event.preventDefault();
                 backspaceAction?.();
+                break;
+
+            case 'ArrowUp':
+                event.preventDefault();
+                if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+                    caretUpAction?.();
+                }
+                break;
+
+            case 'ArrowDown':
+                event.preventDefault();
+                if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+                    caretDownAction?.();
+                }
                 break;
 
             case 'ArrowLeft':
@@ -90,27 +98,39 @@ const TextBox = ({
                 }
                 break;
         }
-    }, [caretLeftAction, caretRightAction, selectAction, selectLeftAction, selectRightAction]);
+    }, [
+        caretUpAction, caretDownAction,
+        caretLeftAction, caretRightAction,
+        selectLeftAction, selectRightAction
+    ]);
+
+    let lineStart = before.lastIndexOf('\n');
+    let lineEnd = after.indexOf('\n');
+
+    const beforeLine = before.substring(0, lineStart + 1);
+    const afterLine = after.substring(lineEnd + 1);
+
+    let lineBefore = before.substring(lineStart + 1);
+    let lineAfter = after.substring(0, lineEnd);
+
+    if (lineAfter === '') {
+        lineAfter = ' ';
+    }
 
     return <div role="textbox" className={styles.textBox} onClick={onClick}>
-        <div>...</div>
-        <div>
-        <span>{before}</span>
-        <span ref={selectionStartRef} />
-        <span className={styles.selection}>
-        {selection}
-        <span className={styles.cursor}>
-           <span ref={cursorRef}
+        <div className={styles.contents}>
+        <div className={styles.beforeLine}>{beforeLine}</div>
+        <div className={styles.currentLine}>
+           {lineBefore}
+           <span className={styles.cursor} ref={cursorRef}
                contentEditable={true} suppressContentEditableWarning={true}
                onBeforeInput={onBeforeInput}
                onKeyDown={onKeyDown}
               />
-           </span>
-        </span>
-        <span ref={selectionEndRef} />
-        <span>{after}</span>
+           {lineAfter}
         </div>
-        <div>...</div>
+        <div className={styles.afterLine}>{afterLine}</div>
+        </div>
         </div>;
 };
 

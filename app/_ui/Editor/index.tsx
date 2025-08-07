@@ -78,6 +78,14 @@ interface CaretRightAction {
     type: 'caretRight';
 }
 
+interface CaretUpAction {
+    type: 'caretUp';
+}
+
+interface CaretDownAction {
+    type: 'caretDown';
+}
+
 interface SelectLeftAction {
     type: 'selectLeft';
 }
@@ -98,6 +106,7 @@ type Action =
     | InputAction
     | BackspaceAction
     | CaretLeftAction | CaretRightAction
+    | CaretUpAction | CaretDownAction
     | SelectAction | SelectLeftAction | SelectRightAction;
 
 const initialState: State = {
@@ -132,15 +141,6 @@ const reducer: (state: State, action: Action) => State = (state: State, action: 
             };
         }
 
-        case 'select': {
-            const { value } = state;
-            const { selectionStart, selectionEnd } = action;
-            return {
-                ...state,
-                value: Buf.select(value, selectionStart, selectionEnd)
-            };
-        }
-
         case 'caretLeft':
             return {
                 ...state,
@@ -153,17 +153,26 @@ const reducer: (state: State, action: Action) => State = (state: State, action: 
                 value: Buf.caretRight(state.value)
             };
 
-        case 'selectLeft':
+        case 'caretUp':
             return {
                 ...state,
-                value: Buf.selectLeft(state.value)
+                value: Buf.caretUp(state.value)
             };
 
-        case 'selectRight':
+        case 'caretDown':
             return {
                 ...state,
-                value: Buf.selectRight(state.value)
+                value: Buf.caretDown(state.value)
             };
+
+        case 'select':
+            throw Error("todo");
+
+        case 'selectLeft':
+            throw Error("todo");
+
+        case 'selectRight':
+            throw Error("todo");
 
         case 'backspace':
             return {
@@ -181,9 +190,6 @@ const readFileAction: (result: ArrayBuffer) => ReadFileAction
 
 const inputAction: (result: string) => InputAction
     = (data: string) => ({ type: 'input', data });
-
-const selectAction: (selectionStart: number, selectionEnd: number) => SelectAction
-    = (selectionStart: number, selectionEnd: number) => ({ type: 'select', selectionStart, selectionEnd });
 
 const Editor = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -221,9 +227,6 @@ const Editor = () => {
         dispatch({ type: 'backspace' });
     }, []);
 
-    const selectActionDispatch = useCallback(async (selectionStart: number, selectionEnd: number) => {
-        dispatch(selectAction(selectionStart, selectionEnd));
-    }, []);
     const selectLeftAction = useCallback(async () => {
         dispatch({ type: 'selectLeft' });
     }, []);
@@ -238,17 +241,34 @@ const Editor = () => {
         dispatch({ type: 'caretRight' });
     }, []);
 
+    const caretUpAction = useCallback(async () => {
+        dispatch({ type: 'caretUp' });
+    }, []);
+    const caretDownAction = useCallback(async () => {
+        dispatch({ type: 'caretDown' });
+    }, []);
+
     const h1Id = useId();
     const disclosureButtonId = useId();
 
-    const len = 200;
+    const len = 2000;
+    // FIXME use deferred value?
     const view = useMemo(() => {
-        const { before, selection, after } = value;
-        return {
-            before: before.substring(before.lastIndexOf('\n', before.length - len)),
-            selection,
-            after: after.substring(0, after.indexOf('\n', len))
-        };
+        let { before, after } = value;
+        let beforeIndex = before.lastIndexOf('\n', before.length - len);
+        if (beforeIndex < 0) {
+            beforeIndex = 0;
+        }
+        if (beforeIndex > 0) {
+            beforeIndex += 1;
+        }
+        let afterIndex = after.indexOf('\n', len);
+        if (afterIndex < 0) {
+            afterIndex = len;
+        }
+        before = before.substring(beforeIndex);
+        after = after.substring(0, afterIndex);
+        return { before, after };
     }, [value, len]);
     return <main aria-describedby={h1Id}>
         <title>{title}</title>
@@ -279,8 +299,9 @@ const Editor = () => {
                      disabled={loading}
                      value={view}
                      inputAction={inputActionDispatch} backspaceAction={backspaceActionDispatch}
-                     selectAction={selectActionDispatch} selectLeftAction={selectLeftAction} selectRightAction={selectRightAction}
+                     selectLeftAction={selectLeftAction} selectRightAction={selectRightAction}
                      caretLeftAction={caretLeftAction} caretRightAction={caretRightAction}
+                     caretUpAction={caretUpAction} caretDownAction={caretDownAction}
               />
             </Layout>
         </main>;
