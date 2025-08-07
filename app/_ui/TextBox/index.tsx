@@ -1,16 +1,16 @@
 "use client";
 
 import type { KeyboardEvent, InputEvent } from "react";
-import type Buffer from "@/lib/Buffer";
-import * as Buf from "@/lib/Buffer";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type Screen from "@/lib/Screen";
+import * as Scr from "@/lib/Screen";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import styles from "./TextBox.module.css";
 
 interface Props {
     disabled?: boolean;
 
-    value?: Buffer;
+    value?: Screen;
 
     inputAction: (data: string) => Promise<void>;
     backspaceAction: () => Promise<void>;
@@ -28,7 +28,7 @@ interface Props {
 const TextBox = ({
     disabled = false,
 
-    value = Buf.empty,
+    value = Scr.empty,
 
     inputAction,
     backspaceAction,
@@ -42,9 +42,16 @@ const TextBox = ({
     selectLeftAction,
     selectRightAction
 }: Props) => {
-    const { before, after } = value;
 
+    const [focus, setFocus] = useState(false);
     const cursorRef = useRef<HTMLSpanElement>(null);
+
+    const onFocus = useCallback(() => {
+        setFocus(true);
+    }, []);
+    const onBlur = useCallback(() => {
+        setFocus(false);
+    }, []);
 
     const onBeforeInput = useCallback((event: InputEvent<HTMLSpanElement>) => {
         event.preventDefault();
@@ -104,33 +111,28 @@ const TextBox = ({
         selectLeftAction, selectRightAction
     ]);
 
-    let lineStart = before.lastIndexOf('\n');
-    let lineEnd = after.indexOf('\n');
+    const {
+        currentLine: { beforeCursor, afterCursor },
+        beforeLine, afterLine
+    } = value;
 
-    const beforeLine = before.substring(0, lineStart + 1);
-    const afterLine = after.substring(lineEnd + 1);
-
-    let lineBefore = before.substring(lineStart + 1);
-    let lineAfter = after.substring(0, lineEnd);
-
-    if (lineAfter === '') {
-        lineAfter = ' ';
-    }
-
-    return <div role="textbox" className={styles.textBox} onClick={onClick}>
+    return <div role="textbox" className={styles.textBox} onClick={onClick} data-focus={focus}>
         <div className={styles.contents}>
-        <div className={styles.beforeLine}>{beforeLine}</div>
+           <div className={styles.beforeLine}>{beforeLine}</div>
+        <div className={styles.section}>
         <div className={styles.currentLine}>
-           {lineBefore}
-           <span className={styles.cursor} ref={cursorRef}
-               contentEditable={true} suppressContentEditableWarning={true}
-               onBeforeInput={onBeforeInput}
-               onKeyDown={onKeyDown}
-              />
-           {lineAfter}
-        </div>
+                 {beforeCursor}
+                 <span className={styles.cursor} ref={cursorRef}
+                     contentEditable={true} suppressContentEditableWarning={true}
+                     onBeforeInput={onBeforeInput}
+                     onKeyDown={onKeyDown}
+                     onFocus={onFocus} onBlur={onBlur}
+                    />
+                 {afterCursor}
+              </div>
         <div className={styles.afterLine}>{afterLine}</div>
         </div>
+           </div>
         </div>;
 };
 

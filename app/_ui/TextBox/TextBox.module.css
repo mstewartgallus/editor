@@ -1,3 +1,10 @@
+.contents {
+    top: 50%;
+    bottom: 0;
+    background: Canvas;
+}
+
+
 .textBox {
     min-block-size: 8em;
     white-space: pre-wrap;
@@ -5,6 +12,8 @@
     overflow: hidden;
     block-size: 100vh;
     inline-size: 100wh;
+
+    background: #EEE;
 }
 
 .selection {
@@ -18,25 +27,27 @@
 .currentLine {
     background: yellow;
 }
+.beforeLine {
+    background: Canvas;
+    border-color: #999;
+    border-width: 1px;
+    border-block-start-style: solid;
+}
 
 .textBox {
     position: relative;
 }
 .contents {
     position: absolute;
-    top: 70%;
     left: 0;
     right: 0;
 }
 .afterLine {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    display: flex;
 }
 .beforeLine {
     position: absolute;
     display: flex;
     bottom: 100%;
     left: 0;
+    right: 0;
 }

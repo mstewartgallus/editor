@@ -252,24 +252,46 @@ const Editor = () => {
     const disclosureButtonId = useId();
 
     const len = 2000;
-    // FIXME use deferred value?
-    const view = useMemo(() => {
-        let { before, after } = value;
-        let beforeIndex = before.lastIndexOf('\n', before.length - len);
-        if (beforeIndex < 0) {
-            beforeIndex = 0;
-        }
-        if (beforeIndex > 0) {
-            beforeIndex += 1;
-        }
-        let afterIndex = after.indexOf('\n', len);
-        if (afterIndex < 0) {
-            afterIndex = len;
-        }
-        before = before.substring(beforeIndex);
-        after = after.substring(0, afterIndex);
-        return { before, after };
-    }, [value, len]);
+    // // FIXME use deferred value?
+    // const view = useMemo(() => {
+    //     let { before, after } = value;
+    //     let beforeIndex = before.lastIndexOf('\n', before.length - len);
+    //     if (beforeIndex < 0) {
+    //         beforeIndex = 0;
+    //     }
+    //     if (beforeIndex > 0) {
+    //         beforeIndex += 1;
+    //     }
+    //     let afterIndex = after.indexOf('\n', len);
+    //     if (afterIndex < 0) {
+    //         afterIndex = len;
+    //     }
+    //     before = before.substring(beforeIndex);
+    //     after = after.substring(0, afterIndex);
+    //     return { before, after };
+    // }, [value, len]);
+
+    const { before, after } = value;
+    let lineStart = before.lastIndexOf('\n');
+    let lineEnd = after.indexOf('\n');
+
+    const beforeLine = before.substring(0, lineStart + 1);
+    const afterLine = after.substring(lineEnd + 1);
+
+    let beforeCursor = before.substring(lineStart + 1);
+    let afterCursor = after.substring(0, lineEnd);
+
+    if (afterCursor === '') {
+        afterCursor = ' ';
+    }
+
+    const view: Screen = {
+        currentLine: {
+            beforeCursor, afterCursor
+        },
+        beforeLine, afterLine
+    };
+
     return <main aria-describedby={h1Id}>
         <title>{title}</title>
         <Layout
