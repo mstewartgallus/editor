@@ -22,11 +22,11 @@ const fontSize = (size: number) => {
 export const Logo = ({ size }: Props) =>
     <div
         style={{
-            background: 'black',
+            background: 'blue',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
+            color: 'yellow',
 
             fontSize: fontSize(size),
             width: `${size}px`,
