@@ -6,8 +6,8 @@
 }
 
 .scrollbox {
-    max-block-size: 100vh;
-    max-inline-size: 100vw;
+    block-size: 100vh;
+    inline-size: 100vw;
     overflow: scroll;
     scrollbar-color: black white;
     scrollbar-width: thin;

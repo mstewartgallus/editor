@@ -53,8 +53,11 @@ const download = (blob: Blob, download?: string) => {
 };
 
 interface State {
+    loading: boolean;
     name: string | null;
-    value: string | null;
+    value: string;
+    selectionStart: number;
+    selectionEnd: number;
 }
 
 interface ChooseFileAction {
@@ -67,22 +70,88 @@ interface ReadFileAction {
     result: string;
 }
 
-type Action = ChooseFileAction | ReadFileAction;
+interface InputAction {
+    type: 'input';
+    data: string;
+}
+
+interface SelectAction {
+    type: 'select';
+    selectionStart: number;
+    selectionEnd: number;
+}
+
+interface BackspaceAction {
+    type: 'backspace';
+}
+
+type Action =
+    | ChooseFileAction
+    | ReadFileAction
+    | InputAction
+    | SelectAction
+    | BackspaceAction;
 
 const initialState: State = {
+    loading: false,
     name: null,
-    value: null
+    value: '',
+    selectionStart: 0,
+    selectionEnd: 0
 };
 
 const reducer = (state: State, action: Action) => {
     switch (action.type) {
         case 'chooseFile': {
             const { name } = action;
-            return { ...state, name, value: null };
+            return {
+                ...state,
+                loading: true,
+                name,
+                value: '', selectionStart: 0, selectionEnd: 0
+            };
         }
+
         case 'readFile': {
             const { result } = action;
-            return { ...state, value: result };
+            return { ...state, loading: false, value: result };
+        }
+
+        case 'input': {
+            let { selectionStart, selectionEnd, value } = state;
+            const { data } = action;
+
+            value = value.substring(0, selectionStart) + data + value.substring(selectionEnd);
+            selectionStart += data.length;
+            selectionEnd = selectionStart;
+
+            return {
+                ...state,
+                value,
+                selectionStart, selectionEnd
+            };
+        }
+
+        case 'select': {
+            const { selectionStart, selectionEnd } = action;
+            return {
+                ...state,
+                selectionStart, selectionEnd
+            };
+        }
+
+        case 'backspace': {
+            let { selectionStart, selectionEnd, value } = state;
+
+            selectionStart -= 1;
+            value = value.substring(0, selectionStart) + value.substring(selectionEnd);
+            selectionEnd = selectionStart;
+
+            return {
+                ...state,
+                value,
+                selectionStart, selectionEnd
+            };
         }
     }
 };
@@ -93,9 +162,19 @@ const chooseFileAction: (name: string) => ChooseFileAction
 const readFileAction: (result: string) => ReadFileAction
     = (result: string) => ({ type: 'readFile', result });
 
+const inputAction: (result: string) => InputAction
+    = (data: string) => ({ type: 'input', data });
+
+const selectAction: (selectionStart: number, selectionEnd: number) => SelectAction
+    = (selectionStart: number, selectionEnd: number) => ({ type: 'select', selectionStart, selectionEnd });
+
 const Editor = () => {
     const [state, dispatch] = useReducer(reducer, initialState);
-    const { name, value } = state;
+    const {
+        loading,
+        name, value,
+        selectionStart, selectionEnd
+    } = state;
 
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -118,6 +197,18 @@ const Editor = () => {
         dispatch(readFileAction(result));
     }, []);
 
+    const inputActionDispatch = useCallback(async (data: string) => {
+        dispatch(inputAction(data));
+    }, []);
+
+    const selectActionDispatch = useCallback(async (selectionStart: number, selectionEnd: number) => {
+        dispatch(selectAction(selectionStart, selectionEnd));
+    }, []);
+
+    const backspaceActionDispatch = useCallback(async () => {
+        dispatch({ type: 'backspace' });
+    }, []);
+
     const h1Id = useId();
     const disclosureButtonId = useId();
 
@@ -135,7 +226,7 @@ const Editor = () => {
                         <DisclosureContents>
                             <MenuList>
                                 <MenuItem>
-                                    <button onClick={uploadAction}>Upload</button>
+                                   <button disabled={loading} onClick={uploadAction}>Upload</button>
                                 </MenuItem>
                                 <MenuItem>
                                     <button disabled={!value} onClick={downloadAction}>Download</button>
@@ -147,7 +238,13 @@ const Editor = () => {
                 }
         >
               <div className={styles.scrollbox}>
-                 <TextBox value={value ?? ''} />
+              <TextBox
+                     disabled={loading}
+                     value={value ?? ''}
+                     selectionStart={selectionStart} selectionEnd={selectionEnd}
+                     inputAction={inputActionDispatch} selectAction={selectActionDispatch}
+                     backspaceAction={backspaceActionDispatch}
+                 />
               </div>
             </Layout>
         </main>;
