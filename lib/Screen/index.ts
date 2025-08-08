@@ -1,5 +1,4 @@
-import type Buffer from "./Buffer";
-import * as Buf from "./Buffer";
+import type Buffer from "../Buffer";
 
 export interface CurrentLine {
     beforeCursor: string;

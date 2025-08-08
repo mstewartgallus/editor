@@ -1,10 +1,8 @@
 "use client";
 
-import type Buffer from "@/lib/Buffer";
-import type Screen from "@/lib/Screen";
-import * as Buf from "@/lib/Buffer";
-import * as Scr from "@/lib/Screen";
-import { useCallback, useId, useMemo, useReducer } from "react";
+import type { EditorHandle } from "@/lib";
+import { useCallback, useId, useRef } from "react";
+import { useEditor } from "@/lib";
 import {
     MenuList, MenuItem,
     Disclosure, DisclosureButton, DisclosureContents
@@ -44,226 +42,60 @@ const download = (blob: Blob, download?: string) => {
     }
 };
 
-interface State {
-    loading: boolean;
-    name: string | null;
-    value: Buffer;
-}
-
-interface ChooseFileAction {
-    type: 'chooseFile';
-    name: string;
-}
-
-interface ReadFileAction {
-    type: 'readFile';
-    result: ArrayBuffer;
-}
-
-interface InputAction {
-    type: 'input';
-    data: string;
-}
-
-interface BackspaceAction {
-    type: 'backspace';
-}
-
-interface DeleteAction {
-    type: 'delete';
-}
-
-interface CaretLeftAction {
-    type: 'caretLeft';
-}
-
-interface CaretRightAction {
-    type: 'caretRight';
-}
-
-interface CaretUpAction {
-    type: 'caretUp';
-}
-
-interface CaretDownAction {
-    type: 'caretDown';
-}
-
-interface SelectLeftAction {
-    type: 'selectLeft';
-}
-
-interface SelectRightAction {
-    type: 'selectRight';
-}
-
-interface SelectAction {
-    type: 'select';
-    selectionStart: number;
-    selectionEnd: number;
-}
-
-type Action =
-    | ChooseFileAction
-    | ReadFileAction
-    | InputAction
-    | BackspaceAction | DeleteAction
-    | CaretLeftAction | CaretRightAction
-    | CaretUpAction | CaretDownAction
-    | SelectAction | SelectLeftAction | SelectRightAction;
-
-const initialState: State = {
-    loading: false,
-    name: null,
-    value: Buf.empty
-};
-
-const reducer: (state: State, action: Action) => State = (state: State, action: Action) => {
-    switch (action.type) {
-        case 'chooseFile': {
-            const { name } = action;
-            return {
-                ...state,
-                loading: true,
-                name,
-                value: Buf.empty
-            };
-        }
-
-        case 'readFile': {
-            const { result } = action;
-            return { ...state, loading: false, value: Buf.fromArrayBuffer(result) };
-        }
-
-        case 'input': {
-            const { value } = state;
-            const { data } = action;
-            return {
-                ...state,
-                value: Buf.insert(value, data)
-            };
-        }
-
-        case 'backspace':
-            return {
-                ...state,
-                value: Buf.deleteBackwards(state.value)
-            };
-
-        case 'delete':
-            return {
-                ...state,
-                value: Buf.deleteForwards(state.value)
-            };
-
-        case 'caretLeft':
-            return {
-                ...state,
-                value: Buf.caretLeft(state.value)
-            };
-
-        case 'caretRight':
-            return {
-                ...state,
-                value: Buf.caretRight(state.value)
-            };
-
-        case 'caretUp':
-            return {
-                ...state,
-                value: Buf.caretUp(state.value)
-            };
-
-        case 'caretDown':
-            return {
-                ...state,
-                value: Buf.caretDown(state.value)
-            };
-
-        case 'select':
-            throw Error("todo");
-
-        case 'selectLeft':
-            throw Error("todo");
-
-        case 'selectRight':
-            throw Error("todo");
-    }
-};
-
-const chooseFileAction: (name: string) => ChooseFileAction
-    = (name: string) => ({ type: 'chooseFile', name });
-
-const readFileAction: (result: ArrayBuffer) => ReadFileAction
-    = (result: ArrayBuffer) => ({ type: 'readFile', result });
-
-const inputAction: (result: string) => InputAction
-    = (data: string) => ({ type: 'input', data });
-
 const Editor = () => {
-    const [state, dispatch] = useReducer(reducer, initialState);
-    const {
-        loading,
-        name, value
-    } = state;
+    const ref = useRef<EditorHandle>(null);
+    const { loading, name, screen, asBlob } = useEditor(ref);
 
     const title = name ?? 'No File';
 
     const downloadAction = useCallback(() => {
-        if (!value) {
-            return;
-        }
-        download(Buf.toBlob(value), title);
-    }, [value, title]);
+        download(asBlob(), title);
+    }, [asBlob, title]);
 
     const uploadAction = useCallback(async () => {
         const file = (await chooseFile())[0];
 
-        dispatch(chooseFileAction(file.name));
+        ref.current!.chooseFile(file.name);
 
-        const result = await file.arrayBuffer();
+        const result = await file.text();
 
-        dispatch(readFileAction(result));
+        ref.current!.readFile(result);
     }, []);
 
-    const inputActionDispatch = useCallback(async (data: string) => {
-        dispatch(inputAction(data));
+    const inputAction = useCallback(async (data: string) => {
+        ref.current!.input(data);
     }, []);
 
     const backspaceAction = useCallback(async () => {
-        dispatch({ type: 'backspace' });
+        ref.current!.deleteBackwards();
     }, []);
     const deleteAction = useCallback(async () => {
-        dispatch({ type: 'delete' });
+        ref.current!.deleteForwards();
     }, []);
 
     const selectLeftAction = useCallback(async () => {
-        dispatch({ type: 'selectLeft' });
+        ref.current!.selectLeft();
     }, []);
     const selectRightAction = useCallback(async () => {
-        dispatch({ type: 'selectRight' });
+        ref.current!.selectRight();
     }, []);
 
     const caretLeftAction = useCallback(async () => {
-        dispatch({ type: 'caretLeft' });
+        ref.current!.caretLeft();
     }, []);
     const caretRightAction = useCallback(async () => {
-        dispatch({ type: 'caretRight' });
+        ref.current!.caretRight();
     }, []);
 
     const caretUpAction = useCallback(async () => {
-        dispatch({ type: 'caretUp' });
+        ref.current!.caretUp();
     }, []);
     const caretDownAction = useCallback(async () => {
-        dispatch({ type: 'caretDown' });
+        ref.current!.caretDown();
     }, []);
 
     const h1Id = useId();
     const disclosureButtonId = useId();
-
-    const view: Screen = useMemo(
-        () => Scr.fromBuffer(value),
-        [value]);
 
     return <main aria-describedby={h1Id}>
         <title>{title}</title>
@@ -295,8 +127,8 @@ const Editor = () => {
         >
               <TextBox
                      disabled={loading}
-                     value={view}
-                     inputAction={inputActionDispatch}
+                     value={screen}
+                     inputAction={inputAction}
                      backspaceAction={backspaceAction} deleteAction={deleteAction}
                      selectLeftAction={selectLeftAction} selectRightAction={selectRightAction}
                      caretLeftAction={caretLeftAction} caretRightAction={caretRightAction}
