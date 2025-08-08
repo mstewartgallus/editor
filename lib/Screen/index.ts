@@ -6,9 +6,10 @@ export interface CurrentLine {
 }
 
 export default interface Screen {
+    start: number;
     currentLine: CurrentLine;
-    beforeLine: string;
-    afterLine: string;
+    beforeLine: string[];
+    afterLine: string[];
 }
 
 export const empty: Readonly<Screen> = {
@@ -16,31 +17,27 @@ export const empty: Readonly<Screen> = {
         beforeCursor: '',
         afterCursor: ''
     },
-    beforeLine: '',
-    afterLine: ''
+    beforeLine: [],
+    afterLine: []
 }
 
-export const fromBuffer = (buffer: Readonly<Buffer>) => {
+export const fromBuffer = (
+    buffer: Readonly<Buffer>,
+    lines: number = 30
+) => {
     const { before, after } = buffer;
-    const lineStart = before.lastIndexOf('\n');
-    let lineEnd = after.indexOf('\n');
-    if (lineEnd < 0) {
-        lineEnd = after.length;
-    }
+    const befores = before.split('\n');
+    const afters = after.split('\n');
 
-    const beforeLine = before.substring(0, lineStart + 1);
-    const afterLine = after.substring(lineEnd + 1);
-
-    const beforeCursor = before.substring(lineStart + 1);
-    let afterCursor = after.substring(0, lineEnd);
-    if (afterCursor === '') {
-        afterCursor = ' ';
-    }
+    let beforeCursor = befores.pop();
+    const afterCursor = afters.shift();
 
     return {
+        start: Math.max(befores.length - lines, 0),
         currentLine: {
             beforeCursor, afterCursor
         },
-        beforeLine, afterLine
+        beforeLine: befores.slice(-lines),
+        afterLine: afters.slice(0, lines)
     };
 };

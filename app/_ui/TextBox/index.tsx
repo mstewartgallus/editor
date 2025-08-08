@@ -120,15 +120,25 @@ const TextBox = ({
     ]);
 
     const {
+        start,
         currentLine: { beforeCursor, afterCursor },
         beforeLine, afterLine
     } = value;
 
+    const len = beforeLine.length;
     return <div role="textbox" className={styles.textBox} onClick={onClick} data-focus={focus}>
         <div className={styles.contents}>
-           <div className={styles.beforeLine}>{beforeLine}</div>
+        <div className={styles.beforeLine}>{
+            beforeLine.map((line, ix) =>
+                <div>
+                    <span>{start + ix}: </span>
+                    <span>{line}</span>
+                </div>)
+        }</div>
         <div className={styles.section}>
         <div className={styles.currentLine}>
+        <span>{start + len}: </span>
+        <span>
                  {beforeCursor}
                  <span className={styles.cursor} ref={cursorRef}
                      contentEditable={!disabled} suppressContentEditableWarning={true}
@@ -136,9 +146,17 @@ const TextBox = ({
                      onKeyDown={onKeyDown}
                      onFocus={onFocus} onBlur={onBlur}
                     />
-                 {afterCursor}
+                  {afterCursor}
+    {' '}
+    </span>
               </div>
-        <div className={styles.afterLine}>{afterLine}</div>
+        <div className={styles.afterLine}>{
+            afterLine.map((line, ix) =>
+                <div>
+                    <span>{start + len + 1 + ix}: </span>
+                    <span>{line}</span>
+                </div>)
+        }</div>
         </div>
            </div>
         </div>;
