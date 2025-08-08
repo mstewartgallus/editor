@@ -289,6 +289,9 @@ const Editor = () => {
                                 <MenuItem>
                                     <button onClick={downloadAction}>Download</button>
                                 </MenuItem>
+                                <MenuItem>
+                                    <a href="https://mstewartgallus.github.io/select-webapp">Select Another App</a>
+                                </MenuItem>
                             </MenuList>
                         </DisclosureContents>
                     </Disclosure>
