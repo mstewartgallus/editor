@@ -14,6 +14,7 @@ interface Props {
 
     inputAction: (data: string) => Promise<void>;
     backspaceAction: () => Promise<void>;
+    deleteAction: () => Promise<void>;
 
     caretLeftAction: () => Promise<void>;
     caretRightAction: () => Promise<void>;
@@ -32,6 +33,7 @@ const TextBox = ({
 
     inputAction,
     backspaceAction,
+    deleteAction,
 
     caretLeftAction,
     caretRightAction,
@@ -67,6 +69,11 @@ const TextBox = ({
             case 'Backspace':
                 event.preventDefault();
                 backspaceAction?.();
+                break;
+
+            case 'Delete':
+                event.preventDefault();
+                deleteAction?.();
                 break;
 
             case 'ArrowUp':
@@ -106,7 +113,7 @@ const TextBox = ({
                 break;
         }
     }, [
-        backspaceAction,
+        backspaceAction, deleteAction,
         caretUpAction, caretDownAction,
         caretLeftAction, caretRightAction,
         selectLeftAction, selectRightAction

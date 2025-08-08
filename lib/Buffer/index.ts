@@ -15,11 +15,17 @@ export const insert = ({ before, after }: Readonly<Buffer>, data: string) => {
     };
 };
 
-// FIXME...
 export const deleteBackwards = ({ before, after }: Readonly<Buffer>) => {
     return {
         before: before.substring(0, before.length - 1),
         after
+    };
+};
+
+export const deleteForwards = ({ before, after }: Readonly<Buffer>) => {
+    return {
+        before,
+        after: after.substring(1)
     };
 };
 

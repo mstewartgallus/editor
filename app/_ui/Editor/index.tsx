@@ -71,6 +71,10 @@ interface BackspaceAction {
     type: 'backspace';
 }
 
+interface DeleteAction {
+    type: 'delete';
+}
+
 interface CaretLeftAction {
     type: 'caretLeft';
 }
@@ -105,7 +109,7 @@ type Action =
     | ChooseFileAction
     | ReadFileAction
     | InputAction
-    | BackspaceAction
+    | BackspaceAction | DeleteAction
     | CaretLeftAction | CaretRightAction
     | CaretUpAction | CaretDownAction
     | SelectAction | SelectLeftAction | SelectRightAction;
@@ -142,6 +146,18 @@ const reducer: (state: State, action: Action) => State = (state: State, action: 
             };
         }
 
+        case 'backspace':
+            return {
+                ...state,
+                value: Buf.deleteBackwards(state.value)
+            };
+
+        case 'delete':
+            return {
+                ...state,
+                value: Buf.deleteForwards(state.value)
+            };
+
         case 'caretLeft':
             return {
                 ...state,
@@ -174,12 +190,6 @@ const reducer: (state: State, action: Action) => State = (state: State, action: 
 
         case 'selectRight':
             throw Error("todo");
-
-        case 'backspace':
-            return {
-                ...state,
-                value: Buf.deleteBackwards(state.value)
-            };
     }
 };
 
@@ -222,8 +232,11 @@ const Editor = () => {
         dispatch(inputAction(data));
     }, []);
 
-    const backspaceActionDispatch = useCallback(async () => {
+    const backspaceAction = useCallback(async () => {
         dispatch({ type: 'backspace' });
+    }, []);
+    const deleteAction = useCallback(async () => {
+        dispatch({ type: 'delete' });
     }, []);
 
     const selectLeftAction = useCallback(async () => {
@@ -304,7 +317,8 @@ const Editor = () => {
               <TextBox
                      disabled={loading}
                      value={view}
-                     inputAction={inputActionDispatch} backspaceAction={backspaceActionDispatch}
+                     inputAction={inputActionDispatch}
+                     backspaceAction={backspaceAction} deleteAction={deleteAction}
                      selectLeftAction={selectLeftAction} selectRightAction={selectRightAction}
                      caretLeftAction={caretLeftAction} caretRightAction={caretRightAction}
                      caretUpAction={caretUpAction} caretDownAction={caretDownAction}
