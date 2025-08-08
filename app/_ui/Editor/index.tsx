@@ -252,7 +252,10 @@ const Editor = () => {
 
     const { before, after } = value;
     const lineStart = before.lastIndexOf('\n');
-    const lineEnd = after.indexOf('\n');
+    let lineEnd = after.indexOf('\n');
+    if (lineEnd < 0) {
+        lineEnd = after.length;
+    }
 
     const beforeLine = before.substring(0, lineStart + 1);
     const afterLine = after.substring(lineEnd + 1);
