@@ -3,9 +3,8 @@
 import type Buffer from "@/lib/Buffer";
 import type Screen from "@/lib/Screen";
 import * as Buf from "@/lib/Buffer";
-import {
-    useCallback, useId, useReducer
-} from "react";
+import * as Scr from "@/lib/Screen";
+import { useCallback, useId, useMemo, useReducer } from "react";
 import {
     MenuList, MenuItem,
     Disclosure, DisclosureButton, DisclosureContents
@@ -30,7 +29,6 @@ const chooseFile = async () => {
     }
     return [...files];
 };
-
 
 const download = (blob: Blob, download?: string) => {
     const href = URL.createObjectURL(blob);
@@ -263,28 +261,9 @@ const Editor = () => {
     const h1Id = useId();
     const disclosureButtonId = useId();
 
-    const { before, after } = value;
-    const lineStart = before.lastIndexOf('\n');
-    let lineEnd = after.indexOf('\n');
-    if (lineEnd < 0) {
-        lineEnd = after.length;
-    }
-
-    const beforeLine = before.substring(0, lineStart + 1);
-    const afterLine = after.substring(lineEnd + 1);
-
-    const beforeCursor = before.substring(lineStart + 1);
-    let afterCursor = after.substring(0, lineEnd);
-    if (afterCursor === '') {
-        afterCursor = ' ';
-    }
-
-    const view: Screen = {
-        currentLine: {
-            beforeCursor, afterCursor
-        },
-        beforeLine, afterLine
-    };
+    const view: Screen = useMemo(
+        () => Scr.fromBuffer(value),
+        [value]);
 
     return <main aria-describedby={h1Id}>
         <title>{title}</title>
