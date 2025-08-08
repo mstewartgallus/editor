@@ -1,38 +1,20 @@
 'use client';
 
 import type { Ref } from "react";
-import { compose } from "redux";
+import { compose } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { usePersist } from "./LibProvider";
 import { useImperativeHandle } from 'react';
 import type { AppDispatch, AppStore, RootState } from "./store";
-import {
-    selectAsBlob,
-    selectScreen,
-    selectLoading,
-    selectName,
-
-    chooseFile,
-    readFile,
-    input,
-
-    deleteBackwards, deleteForwards,
-
-    caretLeft, caretRight,
-
-    caretUp, caretDown,
-    select,
-    selectLeft, selectRight
-} from "@/lib/features/editor/editorSlice";
+import { editorSlice } from "@/lib/features/editor/editorSlice";
 
 export const useAppStore = useStore.withTypes<AppStore>();
 const useAppSelector = useSelector.withTypes<RootState>();
 const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 
-// FIXME setup a separate thing for each page?
 export interface EditorHandle {
-    chooseFile(name: string): void;
-    readFile(result: string): void;
+    // FIXME... return more info?
+    fetch(name: string, href: string): Promise<void>;
     input(data: string): void;
 
     deleteBackwards(): void;
@@ -54,30 +36,35 @@ export const useEditor = (ref: Ref<EditorHandle>) => {
 
     const dispatch = useAppDispatch();
 
-    useImperativeHandle(ref, () => ({
-        chooseFile: compose(dispatch, chooseFile),
-        readFile: compose(dispatch, readFile),
+    useImperativeHandle(ref, () => {
+        const { actions } = editorSlice;
+        return {
+            fetch: async (name: string, href: string) => {
+                await dispatch(actions.fetch({ name, href }));
+            },
 
-        input: compose(dispatch, input),
+            input: compose(dispatch, actions.input),
 
-        deleteBackwards: compose(dispatch, deleteBackwards),
-        deleteForwards: compose(dispatch, deleteForwards),
+            deleteBackwards: compose(dispatch, actions.deleteBackwards),
+            deleteForwards: compose(dispatch, actions.deleteForwards),
 
-        caretLeft: compose(dispatch, caretLeft),
-        caretRight: compose(dispatch, caretRight),
+            caretLeft: compose(dispatch, actions.caretLeft),
+            caretRight: compose(dispatch, actions.caretRight),
 
-        caretUp: compose(dispatch, caretUp),
-        caretDown: compose(dispatch, caretDown),
+            caretUp: compose(dispatch, actions.caretUp),
+            caretDown: compose(dispatch, actions.caretDown),
 
-        select: compose(dispatch, select),
-        selectLeft: compose(dispatch, selectLeft),
-        selectRight: compose(dispatch, selectRight),
-    }), [dispatch]);
+            select: compose(dispatch, actions.select),
+            selectLeft: compose(dispatch, actions.selectLeft),
+            selectRight: compose(dispatch, actions.selectRight),
+        };
+    }, [dispatch]);
 
+    const { selectors } = editorSlice;
     return {
-        asBlob: useAppSelector(selectAsBlob),
-        screen: useAppSelector(selectScreen),
-        loading: useAppSelector(selectLoading),
-        name: useAppSelector(selectName)
+        asBlob: useAppSelector(selectors.selectAsBlob),
+        screen: useAppSelector(selectors.selectScreen),
+        loading: useAppSelector(selectors.selectLoading),
+        name: useAppSelector(selectors.selectName)
     };
 };

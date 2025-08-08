@@ -54,12 +54,14 @@ const Editor = () => {
 
     const uploadAction = useCallback(async () => {
         const file = (await chooseFile())[0];
+        const name = file.name;
 
-        ref.current!.chooseFile(file.name);
-
-        const result = await file.text();
-
-        ref.current!.readFile(result);
+        const href = URL.createObjectURL(file);
+        try {
+            await ref.current!.fetch(name, href);
+        } finally {
+            URL.revokeObjectURL(href);
+        }
     }, []);
 
     const inputAction = useCallback(async (data: string) => {

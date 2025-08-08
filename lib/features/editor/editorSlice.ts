@@ -1,21 +1,15 @@
+import type Buffer from "@/lib/Buffer";
 import type { PayloadAction, Selector } from "@reduxjs/toolkit";
-import type Buffer from "../../Buffer";
-import * as Buf from "../../Buffer";
-import * as Scr from "../../Screen";
-import { createSelector, createSlice } from "@reduxjs/toolkit";
+import { createAppSlice } from "@/lib/createAppSlice";
+import * as Buf from "@/lib/Buffer";
+import * as Scr from "@/lib/Screen";
+import { createSelector } from "@reduxjs/toolkit";
+
 
 export interface EditorSliceState {
     loading: boolean;
     name: string | null;
     buffer: Buffer;
-}
-
-interface ChooseFileAction {
-    name: string;
-}
-
-interface ReadFileAction {
-    result: string;
 }
 
 interface InputAction {
@@ -32,26 +26,33 @@ type EditorSelector<T> = Selector<EditorSliceState, T>;
 
 const selectBuffer: EditorSelector<Buffer> = state => state.buffer;
 
-export const editorSlice = createSlice({
+export const editorSlice = createAppSlice({
     name: "editor",
 
     initialState,
 
     reducers: create => ({
-        chooseFile: create.preparedReducer(
-            (name: string) => ({ payload: { name } }),
-            (state, { payload: { name } }: PayloadAction<ChooseFileAction>) => {
-                state.loading = true;
-                state.name = name;
-                state.buffer = Buf.empty;
-            }),
-
-        readFile: create.preparedReducer(
-            (result: string) => ({ payload: { result } }),
-            (state, { payload: { result } }: PayloadAction<ReadFileAction>) => {
-                state.loading = false;
-                state.buffer = Buf.fromString(result);
-            }),
+        fetch: create.asyncThunk(
+            async ({ name, href }: { name: string, href: string }) => {
+                const response = await fetch(href);
+                const text = await response.text();
+                return { name, text };
+            },
+            {
+                pending: state => {
+                    state.loading = true
+                    state.buffer = Buf.empty;
+                },
+                rejected: state => {
+                    state.loading = false
+                },
+                fulfilled: (state, { payload: { name, text } }) => {
+                    state.loading = false
+                    state.name = name;
+                    state.buffer = Buf.fromString(text);
+                }
+            }
+        ),
 
         input: create.preparedReducer(
             (data: string) => ({ payload: { data } }),
@@ -115,25 +116,3 @@ export const editorSlice = createSlice({
         selectName: state => state.name,
     },
 });
-
-export const {
-    chooseFile,
-    readFile,
-
-    input,
-
-    deleteBackwards, deleteForwards,
-
-    caretLeft, caretRight,
-
-    caretUp, caretDown,
-    select,
-    selectLeft, selectRight
-} = editorSlice.actions;
-
-export const {
-    selectAsBlob,
-    selectScreen,
-    selectLoading,
-    selectName
-} = editorSlice.selectors;
