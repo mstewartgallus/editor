@@ -36,3 +36,13 @@
 .line[data-current="true"] {
     background: yellow;
 }
+
+.line {
+    display: flex;
+    gap: 1em;
+}
+
+.lineno {
+    background: lightgrey;
+    min-inline-size: 2em;
+}

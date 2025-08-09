@@ -20,8 +20,8 @@ interface LineProps {
 
 const Line = ({children, index, selected = false}: LineProps) => {
     return <div className={styles.line} data-current={selected}>
-        <span>{index}: </span>
-        <span>{children}</span>
+        <div className={styles.lineno}>{index}</div>
+        <div className={styles.linecontent}>{children}</div>
     </div>;
 };
 
