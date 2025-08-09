@@ -1,9 +1,5 @@
 import type Buffer from "../Buffer";
-
-export interface Caret {
-    line: number;
-    character: number;
-}
+import type Caret from "../Caret";
 
 export default interface Screen {
     start: number;
