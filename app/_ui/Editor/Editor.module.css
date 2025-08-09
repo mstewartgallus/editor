@@ -5,3 +5,17 @@
     padding-inline: 1ch;
 }
 
+.textBox {
+    position: relative;
+    overflow: hidden;
+    block-size: 100vh;
+    inline-size: 100wh;
+    background: #EEE;
+}
+
+.textBoxInner {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}

@@ -115,7 +115,6 @@ const TextBox = ({
     inputAction,
     keyAction
 }: Props) => {
-
     const [focus, setFocus] = useState(false);
     const caretRef = useRef<CaretHandle>(null);
 
@@ -136,15 +135,13 @@ const TextBox = ({
         caret
     } = value;
 
-    return <div role="textbox" className={styles.textBox} onClick={onClick} data-focus={focus}>
-           <div className={styles.contents}>
-              <Lines start={start} lines={lines} caret={caret}>
-                   <Caret ref={caretRef} disabled={disabled}
-                      keyAction={keyAction}
-                      inputAction={inputAction}
-                      focusAction={focusAction} blurAction={blurAction} />
-               </Lines>
-           </div>
+    return <div role="textbox" className={styles.contents} onClick={onClick} data-focus={focus}>
+        <Lines start={start} lines={lines} caret={caret}>
+            <Caret ref={caretRef} disabled={disabled}
+                keyAction={keyAction}
+                inputAction={inputAction}
+                focusAction={focusAction} blurAction={blurAction} />
+        </Lines>
         </div>;
 };
 

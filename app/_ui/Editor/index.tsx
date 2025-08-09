@@ -3,6 +3,7 @@
 import type { EditorHandle } from "@/lib";
 import { useCallback, useId, useMemo, useRef } from "react";
 import { useEditor } from "@/lib";
+import * as Scr from "@/lib/Screen";
 import Menu from "../Menu";
 import Layout from "../Layout";
 import TextBox from "../TextBox";
@@ -52,7 +53,7 @@ const Editor = () => {
 
     const disabled = view.state !== 'open';
 
-    const screen = view.state === 'open' ? view.screen : null;
+    const screen = view.state === 'open' ? view.screen : Scr.empty;
     const name = view.state === 'open' ? view.name : null;
     const asBlob = view.state === 'open' ? view.asBlob : null;
 
@@ -147,8 +148,13 @@ const Editor = () => {
                        <span id={disclosureButtonId}>Menu</span>
                     </Menu>
                 </section>
-                }>
-              <TextBox disabled={disabled} value={screen ?? undefined} inputAction={inputAction} keyAction={keyAction} />
+            }>
+                <div className={styles.textBox}>
+                    <div className={styles.textBoxInner}>
+                        <TextBox value={screen ?? undefined}
+                            disabled={disabled} inputAction={inputAction} keyAction={keyAction} />
+                    </div>
+                </div>
             </Layout>
         </main>;
 };

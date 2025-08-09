@@ -32,10 +32,13 @@ export const fromBuffer: (buffer: Readonly<Buffer>, lines?: number) => Screen = 
     const beforeCursor = befores.pop() ?? '';
     const afterCursor = afters.shift() ?? '';
 
-    const beforeLine = befores.slice(-lines);
     const afterLine = afters.slice(0, lines);
+    const slack = Math.max(lines - afterLine.length, 0);
 
-    const start =  Math.max(befores.length - lines, 0);
+    const beforeLinesCount = lines + slack;
+    const beforeLine = befores.slice(-beforeLinesCount);
+
+    const start =  Math.max(befores.length - beforeLinesCount, 0);
 
     const caret = {
         line: start + beforeLine.length,

@@ -1,28 +1,13 @@
-.textBox {
-    position: relative;
-}
 .contents {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    white-space: pre-wrap;
+    font-family: monospace;
+
     background: Canvas;
     border-color: #999;
     border-width: 1px;
     border-block-start-style: solid;
 }
 
-
-.textBox {
-    min-block-size: 8em;
-    white-space: pre-wrap;
-    font-family: monospace;
-    overflow: hidden;
-    block-size: 100vh;
-    inline-size: 100wh;
-
-    background: #EEE;
-}
 
 .selection {
     background: lightblue;
