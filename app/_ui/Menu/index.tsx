@@ -11,7 +11,12 @@ interface Props {
     downloadAction?: () => Promise<void>;
 }
 
-const Menu = ({ children, disabled, uploadAction, downloadAction }: Props) =>
+const Menu = ({
+    children,
+    disabled,
+    uploadAction,
+    downloadAction
+}: Props) =>
 <Disclosure>
     <DisclosureButton>{children}</DisclosureButton>
     <DisclosureContents>
@@ -20,7 +25,7 @@ const Menu = ({ children, disabled, uploadAction, downloadAction }: Props) =>
                <button disabled={disabled} onClick={uploadAction}>Upload</button>
             </MenuItem>
             <MenuItem>
-                <button onClick={downloadAction}>Download</button>
+               <button disabled={disabled} onClick={downloadAction}>Download</button>
             </MenuItem>
             <MenuItem>
                 <a href="https://mstewartgallus.github.io/select-webapp">Select Another App</a>

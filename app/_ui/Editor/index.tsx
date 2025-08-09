@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorHandle } from "@/lib";
-import { useCallback, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { useEditor } from "@/lib";
 import Menu from "../Menu";
 import Layout from "../Layout";
@@ -48,12 +48,25 @@ interface Modifiers {
 
 const Editor = () => {
     const ref = useRef<EditorHandle>(null);
-    const { loading, name, screen, asBlob } = useEditor(ref);
+    const { init, disabled, name, screen, asBlob } = useEditor(ref);
+
+    // FIXME... seems racy
+    useEffect(() => {
+        if (init) {
+            return;
+        }
+        ref.current!.init('Initial File');
+    }, [init]);
 
     const title = name ?? 'No File';
 
-    const downloadAction = useCallback(async () => {
-        download(asBlob(), title);
+    const downloadAction = useMemo(() => {
+        if (asBlob === null) {
+            return;
+        }
+        return async () => {
+            download(asBlob(), title);
+        };
     }, [asBlob, title]);
 
     const uploadAction = useCallback(async () => {
@@ -129,12 +142,15 @@ const Editor = () => {
                 </header>}
             menu={
                 <section aria-describedby={disclosureButtonId}>
-                    <Menu disabled={loading} downloadAction={downloadAction} uploadAction={uploadAction}>
+                    <Menu disabled={disabled}
+                        downloadAction={downloadAction}
+                        uploadAction={uploadAction}
+                    >
                        <span id={disclosureButtonId}>Menu</span>
                     </Menu>
                 </section>
                 }>
-              <TextBox disabled={loading} value={screen} inputAction={inputAction} keyAction={keyAction} />
+              <TextBox disabled={disabled} value={screen ?? undefined} inputAction={inputAction} keyAction={keyAction} />
             </Layout>
         </main>;
 };

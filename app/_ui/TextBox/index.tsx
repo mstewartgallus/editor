@@ -127,7 +127,7 @@ const TextBox = ({
     }, []);
 
     const onClick = useCallback(() => {
-        caretRef.current!.focus();
+        caretRef.current?.focus();
     }, []);
 
     const {
