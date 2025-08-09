@@ -2,6 +2,7 @@
 
 import type { ReactNode, KeyboardEvent, InputEvent, Ref } from "react";
 import type Screen from "@/lib/Screen";
+import type { Caret } from "@/lib/Screen";
 import * as Scr from "@/lib/Screen";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 
@@ -24,16 +25,13 @@ interface LinesProps {
     children: ReactNode;
     start: number;
     lines: readonly string[];
-    caret: Readonly<{
-        line: number;
-        character: number;
-    }>;
+    caret: Readonly<Caret>;
 }
 
 const Lines = ({ children, start, lines, caret }: LinesProps) =>
     lines.map((contents, ix) => {
         const index = start + ix;
-        const selected = caret.line === ix;
+        const selected = caret.line === index;
         const key = selected ? 'selected' : index;
         return <Line key={key} index={index} selected={selected}>
             {
@@ -134,20 +132,9 @@ const TextBox = ({
 
     const {
         start,
-        beforeLine,
-        currentLine: { beforeCursor, afterCursor },
-        afterLine
+        lines,
+        caret
     } = value;
-
-    const caret = {
-        line: beforeLine.length,
-        character: beforeCursor.length
-    };
-    const lines: readonly string[] = [
-        ...beforeLine,
-        beforeCursor + afterCursor,
-        ...afterLine
-    ];
 
     return <div role="textbox" className={styles.textBox} onClick={onClick} data-focus={focus}>
            <div className={styles.contents}>
