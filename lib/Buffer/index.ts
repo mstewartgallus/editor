@@ -9,8 +9,9 @@ export const empty: Readonly<Buffer> = {
 };
 
 export const insert = ({ before, after }: Readonly<Buffer>, data: string) => {
+    const newData = data.replace('\r', '\n');
     return {
-        before: before + data,
+        before: before + newData,
         after
     };
 };
