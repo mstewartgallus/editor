@@ -47,6 +47,23 @@ interface Modifiers {
     shiftKey: boolean;
 }
 
+interface Props {
+    disabled?: boolean;
+    value?: Screen;
+    inputAction?: (data: string) => Promise<void>;
+    keyAction?: (key: string, modifiers: Modifiers) => boolean;
+}
+
+const Page = ({ disabled, value, inputAction, keyAction }: Props) => {
+    const { start, lines, caret } = value;
+    return <div className={styles.textBox}>
+            <div className={styles.textBoxInner}>
+                <TextBox start={start} lines={lines} caret={caret}
+                     disabled={disabled} inputAction={inputAction} keyAction={keyAction} />
+            </div>
+        </div>;
+};
+
 const Editor = () => {
     const ref = useRef<EditorHandle>(null);
     const view = useEditor(ref);
@@ -149,12 +166,7 @@ const Editor = () => {
                     </Menu>
                 </section>
             }>
-                <div className={styles.textBox}>
-                    <div className={styles.textBoxInner}>
-                        <TextBox value={screen ?? undefined}
-                            disabled={disabled} inputAction={inputAction} keyAction={keyAction} />
-                    </div>
-                </div>
+                <Page value={screen} disabled={disabled} keyAction={keyAction} inputAction={inputAction} />
             </Layout>
         </main>;
 };

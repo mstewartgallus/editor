@@ -101,8 +101,9 @@ const Caret = ({
 
 interface Props {
     disabled?: boolean;
-
-    value?: Screen;
+    start: number;
+    lines: readonly string[];
+    caret: Readonly<Caret>;
     inputAction?: (data: string) => Promise<void>;
     keyAction?: (key: string, modifiers: Modifiers) => boolean;
 }
@@ -110,7 +111,7 @@ interface Props {
 const TextBox = ({
     disabled = false,
 
-    value = Scr.empty,
+    start, lines, caret,
 
     inputAction,
     keyAction
@@ -128,12 +129,6 @@ const TextBox = ({
     const onClick = useCallback(() => {
         caretRef.current?.focus();
     }, []);
-
-    const {
-        start,
-        lines,
-        caret
-    } = value;
 
     return <div role="textbox" className={styles.contents} onClick={onClick} data-focus={focus}>
         <Lines start={start} lines={lines} caret={caret}>
