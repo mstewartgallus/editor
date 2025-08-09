@@ -7,11 +7,6 @@ import { useCallback, useImperativeHandle, useRef, useState } from "react";
 
 import styles from "./TextBox.module.css";
 
-interface Line {
-    contents: string;
-    cursor?: number;
-}
-
 interface LineProps {
     children?: ReactNode;
     index: number;
@@ -28,21 +23,25 @@ const Line = ({children, index, selected = false}: LineProps) => {
 interface LinesProps {
     children: ReactNode;
     start: number;
-    lines: readonly Line[];
+    lines: readonly string[];
+    caret: Readonly<{
+        line: number;
+        character: number;
+    }>;
 }
 
-const Lines = ({ children, start, lines }: LinesProps) =>
-    lines.map(({ contents, cursor }, ix) => {
+const Lines = ({ children, start, lines, caret }: LinesProps) =>
+    lines.map((contents, ix) => {
         const index = start + ix;
-        const selected = cursor !== undefined;
+        const selected = caret.line === ix;
         const key = selected ? 'selected' : index;
         return <Line key={key} index={index} selected={selected}>
             {
                 selected
                     ? <>
-                    {contents.slice(0, cursor)}
+                    {contents.slice(0, caret.character)}
                     {children}
-                    {contents.slice(cursor)}
+                    {contents.slice(caret.character)}
                     </>
                     : contents
             }
@@ -140,22 +139,19 @@ const TextBox = ({
         afterLine
     } = value;
 
-    const lines: Line[] = [
-        ...beforeLine.map(line => ({
-            contents: line
-        })),
-        {
-            contents: beforeCursor + afterCursor,
-            cursor: beforeCursor.length
-        },
-        ...afterLine.map(line => ({
-            contents: line
-        })),
+    const caret = {
+        line: beforeLine.length,
+        character: beforeCursor.length
+    };
+    const lines: readonly string[] = [
+        ...beforeLine,
+        beforeCursor + afterCursor,
+        ...afterLine
     ];
 
     return <div role="textbox" className={styles.textBox} onClick={onClick} data-focus={focus}>
            <div className={styles.contents}>
-               <Lines start={start} lines={lines}>
+              <Lines start={start} lines={lines} caret={caret}>
                    <Caret ref={caretRef} disabled={disabled}
                       keyAction={keyAction}
                       inputAction={inputAction}

@@ -7,9 +7,9 @@ export interface CurrentLine {
 
 export default interface Screen {
     start: number;
-    currentLine: CurrentLine;
-    beforeLine: string[];
-    afterLine: string[];
+    currentLine: Readonly<CurrentLine>;
+    beforeLine: readonly string[];
+    afterLine: readonly string[];
 }
 
 export const empty: Readonly<Screen> = {
@@ -34,12 +34,15 @@ export const fromBuffer: (buffer: Readonly<Buffer>, lines?: number) => Screen = 
     const beforeCursor = befores.pop() ?? '';
     const afterCursor = afters.shift() ?? '';
 
+    const beforeLine = befores.slice(-lines);
+    const afterLine = afters.slice(0, lines);
+
     return {
         start: Math.max(befores.length - lines, 0),
+        beforeLine,
         currentLine: {
             beforeCursor, afterCursor
         },
-        beforeLine: befores.slice(-lines),
-        afterLine: afters.slice(0, lines)
+        afterLine
     };
 };
