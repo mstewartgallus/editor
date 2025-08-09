@@ -1,6 +1,7 @@
 "use client";
 
 import type { EditorHandle } from "@/lib";
+import type Screen from "@/lib/Screen";
 import { useCallback, useId, useMemo, useRef } from "react";
 import { useEditor } from "@/lib";
 import * as Scr from "@/lib/Screen";
@@ -49,12 +50,12 @@ interface Modifiers {
 
 interface Props {
     disabled?: boolean;
-    value?: Screen;
+    value?: Readonly<Screen>;
     inputAction?: (data: string) => Promise<void>;
     keyAction?: (key: string, modifiers: Modifiers) => boolean;
 }
 
-const Page = ({ disabled, value, inputAction, keyAction }: Props) => {
+const Page = ({ disabled, value = Scr.empty, inputAction, keyAction }: Props) => {
     const { start, lines, caret } = value;
     return <div className={styles.textBox}>
             <div className={styles.textBoxInner}>
@@ -70,7 +71,7 @@ const Editor = () => {
 
     const disabled = view.state !== 'open';
 
-    const screen = view.state === 'open' ? view.screen : Scr.empty;
+    const screen = view.state === 'open' ? view.screen : undefined;
     const name = view.state === 'open' ? view.name : null;
     const asBlob = view.state === 'open' ? view.asBlob : null;
 
