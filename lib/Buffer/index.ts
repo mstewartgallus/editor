@@ -1,75 +1,116 @@
+import type Caret from "../Caret";
+import * as Crt from "../Caret";
+
 export default interface Buffer {
-    before: string;
-    after: string;
+    lines: string[];
+    caret: Caret;
 }
 
 export const empty: Readonly<Buffer> = {
-    before: '',
-    after: ''
+    lines: [''],
+    caret: Crt.start
 };
 
-export const insert = ({ before, after }: Readonly<Buffer>, data: string) => {
-    const newData = data.replace('\r', '\n');
+export const newLine = ({ lines, caret }: Readonly<Buffer>) => {
+    const line = lines[caret.line];
+    const before = line.substring(0, caret.character);
+    const after = line.substring(caret.character);
+    const newCaret = {
+        line: caret.line + 1,
+        character: 0
+    };
     return {
-        before: before + newData,
-        after
+        lines: lines
+            .toSpliced(caret.line, 1, before, after),
+        caret: newCaret
     };
 };
 
-export const deleteBackwards = ({ before, after }: Readonly<Buffer>) => {
+export const insert = ({ lines, caret }: Readonly<Buffer>, data: string) => {
+    const line = lines[caret.line];
+    const newLine = line.substring(0, caret.character) + data + line.substring(caret.character);
+    const newCaret = {
+        line: caret.line,
+        character: caret.character + data.length
+    };
     return {
-        before: before.substring(0, before.length - 1),
-        after
+        lines: lines.with(caret.line, newLine),
+        caret: newCaret
     };
 };
 
-export const deleteForwards = ({ before, after }: Readonly<Buffer>) => {
+export const deleteBackwards = ({ lines, caret }: Readonly<Buffer>) => {
+    const line = lines[caret.line];
+    const newLine = line.substring(0, caret.character - 1) + line.substring(caret.character);
     return {
-        before,
-        after: after.substring(1)
+        lines: lines.with(caret.line, newLine),
+        caret: {
+            line: caret.line,
+            character: caret.character - 1
+        }
     };
 };
 
-export const caretLeft = (
-    { before, after }: Readonly<Buffer>
-) => {
+export const deleteForwards = ({ lines, caret }: Readonly<Buffer>) => {
+    const line = lines[caret.line];
+    const newLine = line.substring(0, caret.character) + line.substring(caret.character + 1);
     return {
-        before: before.substring(0, before.length - 1),
-        after: before.substring(before.length - 1) + after
+        lines: lines.with(caret.line, newLine),
+        caret
     };
 };
 
-export const caretRight = (
-    { before, after }: Readonly<Buffer>
-) => {
+export const caretLeft = ({ lines, caret }: Readonly<Buffer>) => {
+    const { line, character } = caret;
     return {
-        before: before + after.substring(0, 1),
-        after: after.substring(1)
+        lines,
+        caret: {
+            line,
+            character: Math.max(character - 1, 0)
+        }
     };
 };
 
-export const caretUp = (
-    { before, after }: Readonly<Buffer>
-) => {
-    const index = before.lastIndexOf('\n', before.length);
+export const caretRight = ({ lines, caret }: Readonly<Buffer>) => {
+    const { line, character } = caret;
     return {
-        before: before.substring(0, index),
-        after: before.substring(index) + after
+        lines,
+        caret: {
+            line,
+            character: Math.min(character + 1, lines[line].length)
+        }
     };
 };
 
-export const caretDown = (
-    { before, after }: Readonly<Buffer>
-) => {
-    const index = after.indexOf('\n', 1);
+export const caretUp = ({ lines, caret }: Readonly<Buffer>) => {
+    const { line, character } = caret;
+    const newLine = Math.max(0, line - 1);
     return {
-        before: before + after.substring(0, index),
-        after: after.substring(index)
+        lines,
+        caret: {
+            line: newLine,
+            character: Math.min(character, lines[newLine].length)
+        }
+    };
+};
+
+export const caretDown = ({ lines, caret }: Readonly<Buffer>) => {
+    const { line, character } = caret;
+    const newLine = Math.min(lines.length, line + 1);
+    return {
+        lines,
+        caret: {
+            line: newLine,
+            character: Math.min(character, lines[newLine].length)
+        }
     };
 };
 
 export const fromString = (value: string) => {
-    return { before: '', after: value };
+    return {
+        lines: value.split('\n'),
+        caret: Crt.start
+    };
 };
 
 export const fromArrayBuffer = (buffer: ArrayBuffer) => {
@@ -77,6 +118,6 @@ export const fromArrayBuffer = (buffer: ArrayBuffer) => {
     return fromString(textDecoder.decode(buffer));
 };
 
-export const toBlob = ({ before, after }: Readonly<Buffer>) => {
-    return new Blob([before, after]);
+export const toBlob = ({ lines }: Readonly<Buffer>) => {
+    return new Blob(lines);
 };

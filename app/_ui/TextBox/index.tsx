@@ -1,9 +1,7 @@
 "use client";
 
 import type { ReactNode, KeyboardEvent, InputEvent, Ref } from "react";
-import type Screen from "@/lib/Screen";
 import type Caret from "@/lib/Caret";
-import * as Scr from "@/lib/Screen";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 
 import styles from "./TextBox.module.css";
