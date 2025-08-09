@@ -3,10 +3,7 @@
 import type { EditorHandle } from "@/lib";
 import { useCallback, useId, useRef } from "react";
 import { useEditor } from "@/lib";
-import {
-    MenuList, MenuItem,
-    Disclosure, DisclosureButton, DisclosureContents
-} from "@/ui";
+import Menu from "../Menu";
 import Layout from "../Layout";
 import TextBox from "../TextBox";
 
@@ -48,7 +45,7 @@ const Editor = () => {
 
     const title = name ?? 'No File';
 
-    const downloadAction = useCallback(() => {
+    const downloadAction = useCallback(async () => {
         download(asBlob(), title);
     }, [asBlob, title]);
 
@@ -108,25 +105,11 @@ const Editor = () => {
                 </header>}
             menu={
                 <section aria-describedby={disclosureButtonId}>
-                    <Disclosure>
-                        <DisclosureButton><span id={disclosureButtonId}>Menu</span></DisclosureButton>
-                        <DisclosureContents>
-                            <MenuList>
-                                <MenuItem>
-                                   <button disabled={loading} onClick={uploadAction}>Upload</button>
-                                </MenuItem>
-                                <MenuItem>
-                                    <button onClick={downloadAction}>Download</button>
-                                </MenuItem>
-                                <MenuItem>
-                                    <a href="https://mstewartgallus.github.io/select-webapp">Select Another App</a>
-                                </MenuItem>
-                            </MenuList>
-                        </DisclosureContents>
-                    </Disclosure>
+                    <Menu disabled={loading} downloadAction={downloadAction} uploadAction={uploadAction}>
+                       <span id={disclosureButtonId}>Menu</span>
+                    </Menu>
                 </section>
-                }
-        >
+                }>
               <TextBox
                      disabled={loading}
                      value={screen}
