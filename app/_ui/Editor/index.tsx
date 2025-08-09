@@ -39,6 +39,13 @@ const download = (blob: Blob, download?: string) => {
     }
 };
 
+interface Modifiers {
+    altKey: boolean;
+    ctrlKey: boolean;
+    metaKey: boolean;
+    shiftKey: boolean;
+}
+
 const Editor = () => {
     const ref = useRef<EditorHandle>(null);
     const { loading, name, screen, asBlob } = useEditor(ref);
@@ -65,7 +72,7 @@ const Editor = () => {
         ref.current!.input(data);
     }, []);
 
-    const keyAction = useCallback((key: string, modifiers: Modifiers) => {
+    const keyAction = useCallback((key: string, modifiers: Readonly<Modifiers>) => {
         switch (key) {
             case 'Backspace':
                 ref.current!.deleteBackwards();
@@ -98,8 +105,8 @@ const Editor = () => {
                 return false;
 
             case 'ArrowRight':
-                if (!event.ctrlKey && !event.metaKey) {
-                    if (event.shiftKey) {
+                if (!modifiers.ctrlKey && !modifiers.metaKey) {
+                    if (modifiers.shiftKey) {
                         ref.current!.selectRight();
                     } else {
                         ref.current!.caretRight();

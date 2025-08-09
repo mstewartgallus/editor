@@ -51,9 +51,10 @@ const Lines = ({ children, start, lines }: LinesProps) =>
     });
 
 interface Modifiers {
+    altKey: boolean;
     ctrlKey: boolean;
     metaKey: boolean;
-    shiftlKey: boolean;
+    shiftKey: boolean;
 }
 
 interface CaretHandle {
@@ -65,7 +66,7 @@ interface CaretProps {
     disabled: boolean;
 
     // FIXME... make work async
-    keyAction?: (key: string, modifiers: Modifiers) => boolean;
+    keyAction?: (key: string, modifiers: Readonly<Modifiers>) => boolean;
     inputAction?: (data: string) => Promise<void>;
 
     focusAction?: () => Promise<void>;
@@ -89,10 +90,8 @@ const Caret = ({
         inputAction?.(event.data);
     }, [inputAction]);
     const onKeyDown = useCallback((event: KeyboardEvent<HTMLSpanElement>) => {
-        const shiftKey = event.shiftKey;
-        const altKey = event.altKey;
-        const metaKey = event.metaKey;
-        if (!keyAction?.(event.key, { shiftKey, altKey, metaKey })) {
+        const { shiftKey, altKey, ctrlKey, metaKey } = event;
+        if (!keyAction?.(event.key, { shiftKey, altKey, metaKey, ctrlKey })) {
             event.preventDefault();
         }
     }, [keyAction]);
