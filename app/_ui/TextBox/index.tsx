@@ -50,6 +50,12 @@ const Lines = ({ children, start, lines }: LinesProps) =>
         </Line>;
     });
 
+interface Modifiers {
+    ctrlKey: boolean;
+    metaKey: boolean;
+    shiftlKey: boolean;
+}
+
 interface CaretHandle {
     focus(): void;
 }
@@ -58,10 +64,9 @@ interface CaretProps {
     ref: Ref<CaretHandle>;
     disabled: boolean;
 
-    // FIXME rework handlers
-    onKeyDown?: (event: KeyboardEvent<HTMLSpanElement>) => void;
-
-    inputAction: (data: string) => Promise<void>;
+    // FIXME... make work async
+    keyAction?: (key: string, modifiers: Modifiers) => boolean;
+    inputAction?: (data: string) => Promise<void>;
 
     focusAction?: () => Promise<void>;
     blurAction?: () => Promise<void>;
@@ -70,7 +75,7 @@ interface CaretProps {
 const Caret = ({
     ref: handleRef,
     disabled,
-    onKeyDown, inputAction,
+    keyAction, inputAction,
     focusAction, blurAction
 }: CaretProps) => {
     const ref = useRef<HTMLSpanElement>(null);
@@ -83,6 +88,14 @@ const Caret = ({
         event.preventDefault();
         inputAction?.(event.data);
     }, [inputAction]);
+    const onKeyDown = useCallback((event: KeyboardEvent<HTMLSpanElement>) => {
+        const shiftKey = event.shiftKey;
+        const altKey = event.altKey;
+        const metaKey = event.metaKey;
+        if (!keyAction?.(event.key, { shiftKey, altKey, metaKey })) {
+            event.preventDefault();
+        }
+    }, [keyAction]);
     return <span className={styles.caret} ref={ref}
        contentEditable={!disabled} suppressContentEditableWarning={true}
        onBeforeInput={onBeforeInput}
@@ -94,19 +107,8 @@ interface Props {
     disabled?: boolean;
 
     value?: Screen;
-
-    inputAction: (data: string) => Promise<void>;
-    backspaceAction: () => Promise<void>;
-    deleteAction: () => Promise<void>;
-
-    caretLeftAction: () => Promise<void>;
-    caretRightAction: () => Promise<void>;
-
-    caretUpAction: () => Promise<void>;
-    caretDownAction: () => Promise<void>;
-
-    selectLeftAction: () => Promise<void>;
-    selectRightAction: () => Promise<void>;
+    inputAction?: (data: string) => Promise<void>;
+    keyAction?: (key: string, modifiers: Modifiers) => boolean;
 }
 
 const TextBox = ({
@@ -115,17 +117,7 @@ const TextBox = ({
     value = Scr.empty,
 
     inputAction,
-    backspaceAction,
-    deleteAction,
-
-    caretLeftAction,
-    caretRightAction,
-
-    caretUpAction,
-    caretDownAction,
-
-    selectLeftAction,
-    selectRightAction
+    keyAction
 }: Props) => {
 
     const [focus, setFocus] = useState(false);
@@ -141,61 +133,6 @@ const TextBox = ({
     const onClick = useCallback(() => {
         caretRef.current!.focus();
     }, []);
-
-    const onKeyDown = useCallback((event: KeyboardEvent<HTMLSpanElement>) => {
-        switch (event.key) {
-            case 'Backspace':
-                event.preventDefault();
-                backspaceAction?.();
-                break;
-
-            case 'Delete':
-                event.preventDefault();
-                deleteAction?.();
-                break;
-
-            case 'ArrowUp':
-                event.preventDefault();
-                if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
-                    caretUpAction?.();
-                }
-                break;
-
-            case 'ArrowDown':
-                event.preventDefault();
-                if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
-                    caretDownAction?.();
-                }
-                break;
-
-            case 'ArrowLeft':
-                event.preventDefault();
-                if (!event.ctrlKey && !event.metaKey) {
-                    if (event.shiftKey) {
-                        selectLeftAction?.();
-                    } else {
-                        caretLeftAction?.();
-                    }
-                }
-                break;
-
-            case 'ArrowRight':
-                event.preventDefault();
-                if (!event.ctrlKey && !event.metaKey) {
-                    if (event.shiftKey) {
-                        selectRightAction?.();
-                    } else {
-                        caretRightAction?.();
-                    }
-                }
-                break;
-        }
-    }, [
-        backspaceAction, deleteAction,
-        caretUpAction, caretDownAction,
-        caretLeftAction, caretRightAction,
-        selectLeftAction, selectRightAction
-    ]);
 
     const {
         start,
@@ -221,7 +158,7 @@ const TextBox = ({
            <div className={styles.contents}>
                <Lines start={start} lines={lines}>
                    <Caret ref={caretRef} disabled={disabled}
-                      onKeyDown={onKeyDown}
+                      keyAction={keyAction}
                       inputAction={inputAction}
                       focusAction={focusAction} blurAction={blurAction} />
                </Lines>

@@ -65,32 +65,49 @@ const Editor = () => {
         ref.current!.input(data);
     }, []);
 
-    const backspaceAction = useCallback(async () => {
-        ref.current!.deleteBackwards();
-    }, []);
-    const deleteAction = useCallback(async () => {
-        ref.current!.deleteForwards();
-    }, []);
+    const keyAction = useCallback((key: string, modifiers: Modifiers) => {
+        switch (key) {
+            case 'Backspace':
+                ref.current!.deleteBackwards();
+                return false;
 
-    const selectLeftAction = useCallback(async () => {
-        ref.current!.selectLeft();
-    }, []);
-    const selectRightAction = useCallback(async () => {
-        ref.current!.selectRight();
-    }, []);
+            case 'Delete':
+                ref.current!.deleteForwards();
+                return false;
 
-    const caretLeftAction = useCallback(async () => {
-        ref.current!.caretLeft();
-    }, []);
-    const caretRightAction = useCallback(async () => {
-        ref.current!.caretRight();
-    }, []);
+            case 'ArrowUp':
+                if (!modifiers.ctrlKey && !modifiers.metaKey && !modifiers.shiftKey) {
+                    ref.current!.caretUp();
+                }
+                return false;
 
-    const caretUpAction = useCallback(async () => {
-        ref.current!.caretUp();
-    }, []);
-    const caretDownAction = useCallback(async () => {
-        ref.current!.caretDown();
+            case 'ArrowDown':
+                if (!modifiers.ctrlKey && !modifiers.metaKey && !modifiers.shiftKey) {
+                    ref.current!.caretDown();
+                }
+                return false;
+
+            case 'ArrowLeft':
+                if (!modifiers.ctrlKey && !modifiers.metaKey) {
+                    if (modifiers.shiftKey) {
+                        ref.current!.selectLeft();
+                    } else {
+                        ref.current!.caretLeft();
+                    }
+                }
+                return false;
+
+            case 'ArrowRight':
+                if (!event.ctrlKey && !event.metaKey) {
+                    if (event.shiftKey) {
+                        ref.current!.selectRight();
+                    } else {
+                        ref.current!.caretRight();
+                    }
+                }
+                return false;
+        }
+        return true;
     }, []);
 
     const h1Id = useId();
@@ -110,15 +127,7 @@ const Editor = () => {
                     </Menu>
                 </section>
                 }>
-              <TextBox
-                     disabled={loading}
-                     value={screen}
-                     inputAction={inputAction}
-                     backspaceAction={backspaceAction} deleteAction={deleteAction}
-                     selectLeftAction={selectLeftAction} selectRightAction={selectRightAction}
-                     caretLeftAction={caretLeftAction} caretRightAction={caretRightAction}
-                     caretUpAction={caretUpAction} caretDownAction={caretDownAction}
-              />
+              <TextBox disabled={loading} value={screen} inputAction={inputAction} keyAction={keyAction} />
             </Layout>
         </main>;
 };
