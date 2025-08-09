@@ -16,9 +16,6 @@ export interface EditorHandle {
     // FIXME... return more info?
     fetch(name: string, href: string): Promise<void>;
 
-    clear(): void;
-    init(name: string): void;
-
     input(data: string): void;
 
     deleteBackwards(): void;
@@ -47,9 +44,6 @@ export const useEditor = (ref: Ref<EditorHandle>) => {
                 await dispatch(actions.fetch({ name, href }));
             },
 
-            clear: compose(dispatch, actions.clear),
-            init: compose(dispatch, actions.init),
-
             input: compose(dispatch, actions.input),
 
             deleteBackwards: compose(dispatch, actions.deleteBackwards),
@@ -68,11 +62,5 @@ export const useEditor = (ref: Ref<EditorHandle>) => {
     }, [dispatch]);
 
     const { selectors } = editorSlice;
-    return {
-        init: useAppSelector(selectors.selectInit),
-        asBlob: useAppSelector(selectors.selectAsBlob),
-        screen: useAppSelector(selectors.selectScreen),
-        disabled: useAppSelector(selectors.selectDisabled),
-        name: useAppSelector(selectors.selectName)
-    };
+    return useAppSelector(selectors.selectView);
 };

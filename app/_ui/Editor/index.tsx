@@ -1,7 +1,7 @@
 "use client";
 
 import type { EditorHandle } from "@/lib";
-import { useCallback, useEffect, useId, useMemo, useRef } from "react";
+import { useCallback, useId, useMemo, useRef } from "react";
 import { useEditor } from "@/lib";
 import Menu from "../Menu";
 import Layout from "../Layout";
@@ -48,15 +48,13 @@ interface Modifiers {
 
 const Editor = () => {
     const ref = useRef<EditorHandle>(null);
-    const { init, disabled, name, screen, asBlob } = useEditor(ref);
+    const view = useEditor(ref);
 
-    // FIXME... seems racy
-    useEffect(() => {
-        if (init) {
-            return;
-        }
-        ref.current!.init('Initial File');
-    }, [init]);
+    const disabled = view.state !== 'open';
+
+    const screen = view.state === 'open' ? view.screen : null;
+    const name = view.state === 'open' ? view.name : null;
+    const asBlob = view.state === 'open' ? view.asBlob : null;
 
     const title = name ?? 'No File';
 
