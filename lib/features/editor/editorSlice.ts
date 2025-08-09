@@ -110,7 +110,7 @@ export const editorSlice = createAppSlice({
             })
     }),
     selectors: {
-        selectScreen: createSelector(selectBuffer, Scr.fromBuffer),
+        selectScreen: createSelector(selectBuffer, buf => Scr.fromBuffer(buf)),
         selectAsBlob: createSelector(selectBuffer, buf => () => Buf.toBlob(buf)),
         selectLoading: state => state.loading,
         selectName: state => state.name,

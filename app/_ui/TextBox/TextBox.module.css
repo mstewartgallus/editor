@@ -1,7 +1,15 @@
+.textBox {
+    position: relative;
+}
 .contents {
-    top: 50%;
+    position: absolute;
     bottom: 0;
+    left: 0;
+    right: 0;
     background: Canvas;
+    border-color: #999;
+    border-width: 1px;
+    border-block-start-style: solid;
 }
 
 
@@ -20,38 +28,11 @@
     background: lightblue;
 }
 
-.cursor {
+.caret {
+    outline-style: none;
     color: blue;
 }
 
-.currentLine {
+.line[data-current="true"] {
     background: yellow;
-}
-.beforeLine {
-    background: Canvas;
-    border-color: #999;
-    border-width: 1px;
-    border-block-start-style: solid;
-}
-.beforeLine, .afterLine {
-    display: flex;
-    flex-direction: column;
-}
-
-.textBox {
-    position: relative;
-}
-.contents {
-    position: absolute;
-    left: 0;
-    right: 0;
-}
-.afterLine {
-}
-.beforeLine {
-    position: absolute;
-    display: flex;
-    bottom: 100%;
-    left: 0;
-    right: 0;
 }

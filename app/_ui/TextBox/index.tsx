@@ -1,11 +1,94 @@
 "use client";
 
-import type { KeyboardEvent, InputEvent } from "react";
+import type { ReactNode, KeyboardEvent, InputEvent, Ref } from "react";
 import type Screen from "@/lib/Screen";
 import * as Scr from "@/lib/Screen";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useImperativeHandle, useRef, useState } from "react";
 
 import styles from "./TextBox.module.css";
+
+interface Line {
+    contents: string;
+    cursor?: number;
+}
+
+interface LineProps {
+    children?: ReactNode;
+    index: number;
+    selected?: boolean;
+}
+
+const Line = ({children, index, selected = false}: LineProps) => {
+    return <div className={styles.line} data-current={selected}>
+        <span>{index}: </span>
+        <span>{children}</span>
+    </div>;
+};
+
+interface LinesProps {
+    children: ReactNode;
+    start: number;
+    lines: readonly Line[];
+}
+
+const Lines = ({ children, start, lines }: LinesProps) =>
+    lines.map(({ contents, cursor }, ix) => {
+        const index = start + ix;
+        const selected = cursor !== undefined;
+        const key = selected ? 'selected' : index;
+        return <Line key={key} index={index} selected={selected}>
+            {
+                selected
+                    ? <>
+                    {contents.slice(0, cursor)}
+                    {children}
+                    {contents.slice(cursor)}
+                    </>
+                    : contents
+            }
+            {' '}
+        </Line>;
+    });
+
+interface CaretHandle {
+    focus(): void;
+}
+
+interface CaretProps {
+    ref: Ref<CaretHandle>;
+    disabled: boolean;
+
+    // FIXME rework handlers
+    onKeyDown?: (event: KeyboardEvent<HTMLSpanElement>) => void;
+
+    inputAction: (data: string) => Promise<void>;
+
+    focusAction?: () => Promise<void>;
+    blurAction?: () => Promise<void>;
+}
+
+const Caret = ({
+    ref: handleRef,
+    disabled,
+    onKeyDown, inputAction,
+    focusAction, blurAction
+}: CaretProps) => {
+    const ref = useRef<HTMLSpanElement>(null);
+    useImperativeHandle(handleRef, () => ({
+        focus() {
+            ref.current!.focus();
+        }
+    }), []);
+    const onBeforeInput = useCallback((event: InputEvent<HTMLSpanElement>) => {
+        event.preventDefault();
+        inputAction?.(event.data);
+    }, [inputAction]);
+    return <span className={styles.caret} ref={ref}
+       contentEditable={!disabled} suppressContentEditableWarning={true}
+       onBeforeInput={onBeforeInput}
+       onKeyDown={onKeyDown}
+       onFocus={focusAction} onBlur={blurAction} />;
+};
 
 interface Props {
     disabled?: boolean;
@@ -46,22 +129,17 @@ const TextBox = ({
 }: Props) => {
 
     const [focus, setFocus] = useState(false);
-    const cursorRef = useRef<HTMLSpanElement>(null);
+    const caretRef = useRef<CaretHandle>(null);
 
-    const onFocus = useCallback(() => {
+    const focusAction = useCallback(async () => {
         setFocus(true);
     }, []);
-    const onBlur = useCallback(() => {
+    const blurAction = useCallback(async () => {
         setFocus(false);
     }, []);
 
-    const onBeforeInput = useCallback((event: InputEvent<HTMLSpanElement>) => {
-        event.preventDefault();
-        inputAction?.(event.data);
-    }, [inputAction]);
-
     const onClick = useCallback(() => {
-        cursorRef.current!.focus();
+        caretRef.current!.focus();
     }, []);
 
     const onKeyDown = useCallback((event: KeyboardEvent<HTMLSpanElement>) => {
@@ -121,43 +199,32 @@ const TextBox = ({
 
     const {
         start,
+        beforeLine,
         currentLine: { beforeCursor, afterCursor },
-        beforeLine, afterLine
+        afterLine
     } = value;
 
-    const len = beforeLine.length;
+    const lines: Line[] = [
+        ...beforeLine.map(line => ({
+            contents: line
+        })),
+        {
+            contents: beforeCursor + afterCursor,
+            cursor: beforeCursor.length
+        },
+        ...afterLine.map(line => ({
+            contents: line
+        })),
+    ];
+
     return <div role="textbox" className={styles.textBox} onClick={onClick} data-focus={focus}>
-        <div className={styles.contents}>
-        <div className={styles.beforeLine}>{
-            beforeLine.map((line, ix) =>
-                <div>
-                    <span>{start + ix}: </span>
-                    <span>{line}</span>
-                </div>)
-        }</div>
-        <div className={styles.section}>
-        <div className={styles.currentLine}>
-        <span>{start + len}: </span>
-        <span>
-                 {beforeCursor}
-                 <span className={styles.cursor} ref={cursorRef}
-                     contentEditable={!disabled} suppressContentEditableWarning={true}
-                     onBeforeInput={onBeforeInput}
-                     onKeyDown={onKeyDown}
-                     onFocus={onFocus} onBlur={onBlur}
-                    />
-                  {afterCursor}
-    {' '}
-    </span>
-              </div>
-        <div className={styles.afterLine}>{
-            afterLine.map((line, ix) =>
-                <div>
-                    <span>{start + len + 1 + ix}: </span>
-                    <span>{line}</span>
-                </div>)
-        }</div>
-        </div>
+           <div className={styles.contents}>
+               <Lines start={start} lines={lines}>
+                   <Caret ref={caretRef} disabled={disabled}
+                      onKeyDown={onKeyDown}
+                      inputAction={inputAction}
+                      focusAction={focusAction} blurAction={blurAction} />
+               </Lines>
            </div>
         </div>;
 };
