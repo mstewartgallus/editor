@@ -33,7 +33,7 @@ export interface EditorHandle {
 }
 
 export const useEditor = (ref: Ref<EditorHandle>) => {
-    usePersist();
+    const persisting = usePersist();
 
     const dispatch = useAppDispatch();
 
@@ -43,6 +43,8 @@ export const useEditor = (ref: Ref<EditorHandle>) => {
             fetch: async (name: string, href: string) => {
                 await dispatch(actions.fetch({ name, href }));
             },
+
+            init: compose(dispatch, actions.init),
 
             input: compose(dispatch, actions.input),
 
@@ -62,5 +64,5 @@ export const useEditor = (ref: Ref<EditorHandle>) => {
     }, [dispatch]);
 
     const { selectors } = editorSlice;
-    return useAppSelector(selectors.selectView);
+    return { persisting, ...useAppSelector(selectors.selectView) };
 };

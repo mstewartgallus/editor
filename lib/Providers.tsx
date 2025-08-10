@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { Store } from "redux";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { StoreProvider } from "./StoreProvider";
 import { persistStore } from "redux-persist";
 import { createContext, useEffect, useMemo, useContext } from "react";
@@ -24,6 +24,7 @@ const withResolvers = <T,>() => {
 };
 
 interface Context {
+    init: boolean;
     persist(): void;
 }
 
@@ -39,6 +40,7 @@ interface Props {
 export const Providers = ({ children }: Readonly<Props>) => {
     const ref = useRef<State>(null);
     const storeRef = useRef<Store>(null);
+    const [persisting, setPersisting] = useState(false);
 
     if (!ref.current) {
         const { promise, resolve } = withResolvers<void>();
@@ -50,13 +52,16 @@ export const Providers = ({ children }: Readonly<Props>) => {
         const { init, promise, resolve } = ref.current!;
 
         if (!init) {
-            persistStore(store, null, () => resolve());
+            persistStore(store, null, () => {
+                setPersisting(true);
+                resolve();
+            });
             ref.current!.init = true;
         }
 
         return promise;
     }, []);
-    const context = useMemo(() => ({ persist }), [persist]);
+    const context = useMemo(() => ({ persist, persisting }), [persist, persisting]);
     return <StoreProvider ref={storeRef}>
         <LibContext value={context}>
            {children}
@@ -65,8 +70,9 @@ export const Providers = ({ children }: Readonly<Props>) => {
 };
 
 export const usePersist = () => {
-    const { persist } = useContext(LibContext);
+    const { persisting, persist } = useContext(LibContext);
     useEffect(() => {
         persist();
     }, [persist]);
+    return persisting;
 };

@@ -5,7 +5,7 @@ import storage from "./storage";
 import { editorSlice } from "./features/editor/editorSlice";
 
 const persistConfig = {
-    key: "editor-2",
+    key: "editor-3",
     storage
 };
 

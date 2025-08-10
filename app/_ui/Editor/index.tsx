@@ -2,7 +2,7 @@
 
 import type { EditorHandle } from "@/lib";
 import type Screen from "@/lib/Screen";
-import { useCallback, useId, useMemo, useRef } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef } from "react";
 import { useEditor } from "@/lib";
 import * as Scr from "@/lib/Screen";
 import Menu from "../Menu";
@@ -67,15 +67,35 @@ const Page = ({ disabled, value = Scr.empty, inputAction, keyAction }: Props) =>
 
 const Editor = () => {
     const ref = useRef<EditorHandle>(null);
-    const view = useEditor(ref);
+    const { persisting, ...view } = useEditor(ref);
+
+    const shouldInitialize = persisting && view.state === 'uninitialized';
+    useEffect(() => {
+        if (!shouldInitialize) {
+            return;
+        }
+        ref.current!.init('Blank');
+    }, [shouldInitialize]);
 
     const disabled = view.state !== 'open';
 
     const screen = view.state === 'open' ? view.screen : undefined;
-    const name = view.state === 'open' ? view.name : null;
     const asBlob = view.state === 'open' ? view.asBlob : null;
 
-    const title = name ?? 'No File';
+    const name = (() => {
+        switch (view.state) {
+            case 'open':
+                return view.name;
+            case 'loading':
+                return 'Loading...';
+            case 'error':
+                return 'Error!';
+            case 'uninitialized':
+                return 'Initializing...';
+        }
+    })();
+
+    const title = name;
 
     const downloadAction = useMemo(() => {
         if (asBlob === null) {

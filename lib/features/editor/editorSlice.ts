@@ -12,6 +12,9 @@ interface InputAction {
     data: string;
 }
 
+interface Uninitialized {
+    state: 'uninitialized';
+}
 interface Loading {
     state: 'loading';
 }
@@ -23,17 +26,15 @@ interface Open {
     name: string;
     buffer: Buffer;
 }
-export type EditorSliceState = Open | Loading | Error;
+export type EditorSliceState = Uninitialized | Open | Loading | Error;
 
 type EditorSelector<T> = Selector<EditorSliceState, T>;
 
 type EditorSliceCaseReducers = SliceCaseReducers<EditorSliceState>;
 
-const initialState: EditorSliceState = {
-    state: 'open',
-    buffer: Buf.empty,
-    name: 'Scratch'
-};;
+const uninitializedState: EditorSliceState = {
+    state: 'uninitialized'
+};
 const errorState: EditorSliceState = {
     state: 'error'
 };
@@ -59,14 +60,27 @@ const reducers = (create: ReducerCreators<EditorSliceState>) => ({
         }
     ),
 
+    init: create.preparedReducer(
+        (name: string) => ({ payload: name }),
+        (state, { payload: name }) => {
+            if (state.state !== 'uninitialized') {
+                throw Error("not uninitialized");
+            }
+
+            return {
+                state: 'open',
+                name: name,
+                buffer: Buf.empty
+            };
+        }),
+
     input: create.preparedReducer(
         (data: string) => ({ payload: { data } }),
         (state, { payload: { data } }: PayloadAction<InputAction>) => {
             if (state.state !== 'open') {
                 throw Error("not an open buffer");
             }
-            // FIXME ...
-            if (data === '\r') {
+            if (data === '\r' || data === '\n') {
                 state.buffer = Buf.newLine(state.buffer);
             } else {
                 state.buffer = Buf.insert(state.buffer, data);
@@ -158,6 +172,9 @@ const selectName = (state: EditorSliceState) => {
     return state.name;
 };
 
+interface UninitializedView {
+    state: 'uninitialized';
+}
 interface LoadingView {
     state: 'loading';
 }
@@ -170,7 +187,7 @@ interface OpenView {
     screen: Screen;
     asBlob: () => Blob;
 }
-type View = LoadingView | ErrorView | OpenView;
+type View = UninitializedView | LoadingView | ErrorView | OpenView;
 
 const selectView: EditorSelector<View> = createSelector(
     [selectState, selectBuffer, selectName],
@@ -189,6 +206,9 @@ const selectView: EditorSelector<View> = createSelector(
 
             case 'error':
                 return { state: 'error' };
+
+            case 'uninitialized':
+                return { state: 'uninitialized' };
         }
     });
 
@@ -200,5 +220,5 @@ export const editorSlice = createAppSlice<EditorSliceState, EditorSliceCaseReduc
     name: "editor",
     reducers,
     selectors,
-    initialState
+    initialState: uninitializedState
 });
