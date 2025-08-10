@@ -41,7 +41,9 @@ export const insert = ({ lines, caret }: Readonly<Buffer>, data: string) => {
 
 export const deleteBackwards = ({ lines, caret }: Readonly<Buffer>) => {
     const line = lines[caret.line];
-    const newLine = line.substring(0, caret.character - 1) + line.substring(caret.character);
+    const before = line.substring(0, caret.character - 1);
+    const after = line.substring(caret.character);
+    const newLine = before + after;
     return {
         lines: lines.with(caret.line, newLine),
         caret: {
@@ -53,7 +55,9 @@ export const deleteBackwards = ({ lines, caret }: Readonly<Buffer>) => {
 
 export const deleteForwards = ({ lines, caret }: Readonly<Buffer>) => {
     const line = lines[caret.line];
-    const newLine = line.substring(0, caret.character) + line.substring(caret.character + 1);
+    const before = line.substring(0, caret.character);
+    const after = line.substring(caret.character + 1);
+    const newLine = before + after;
     return {
         lines: lines.with(caret.line, newLine),
         caret
