@@ -3,7 +3,7 @@
 import type { Ref } from "react";
 import { compose } from "@reduxjs/toolkit";
 import { useDispatch, useSelector, useStore } from "react-redux";
-import { usePersist } from "./LibProvider";
+import { usePersist } from "./Providers";
 import { useImperativeHandle } from 'react';
 import type { AppDispatch, AppStore, RootState } from "./store";
 import { editorSlice } from "@/lib/features/editor/editorSlice";
