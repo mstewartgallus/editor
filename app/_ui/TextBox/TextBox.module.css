@@ -1,6 +1,10 @@
 .contents {
+    min-block-size: 40em;
     white-space: pre-wrap;
     font-family: monospace;
+
+    display: flex;
+    flex-direction: column;
 
     background: Canvas;
     border-color: #999;
@@ -22,12 +26,15 @@
     background: yellow;
 }
 
-.line {
+.linetrailing {
+    flex-grow: 1;
+}
+.line, .linetrailing {
     display: flex;
-    gap: 1em;
+    gap: 1ch;
 }
 
 .lineno {
     background: lightgrey;
-    min-inline-size: 2em;
+    min-inline-size: 1.8em;
 }

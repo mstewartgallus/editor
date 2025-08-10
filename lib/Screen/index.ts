@@ -13,7 +13,7 @@ export const empty: Readonly<Screen> = {
         line: 0,
         character: 0
     },
-    lines: Array(80).fill('')
+    lines: Array(30).fill('')
 }
 
 // FIXME.. lines is UI

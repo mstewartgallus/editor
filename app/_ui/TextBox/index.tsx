@@ -135,6 +135,10 @@ const TextBox = ({
                 inputAction={inputAction}
                 focusAction={focusAction} blurAction={blurAction} />
         </Lines>
+        <div className={styles.linetrailing}>
+        <div className={styles.lineno} />
+        <div className={styles.linecontent} />
+        </div>
         </div>;
 };
 
