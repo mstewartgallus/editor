@@ -16,6 +16,8 @@ export interface EditorHandle {
     // FIXME... return more info?
     fetch(name: string, href: string): Promise<void>;
 
+    init(name: string): void;
+
     input(data: string): void;
 
     deleteBackwards(): void;

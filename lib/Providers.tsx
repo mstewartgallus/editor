@@ -24,12 +24,13 @@ const withResolvers = <T,>() => {
 };
 
 interface Context {
-    init: boolean;
+    persisting: boolean;
     persist(): void;
 }
 
 const LibContext = createContext<Context>({
     persist: () => {},
+    persisting: false
 });
 LibContext.displayName = 'LibContext';
 
