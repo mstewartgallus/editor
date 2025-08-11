@@ -86,6 +86,14 @@ const reducers = (create: ReducerCreators<EditorSliceState>) => ({
                 state.buffer = Buf.insert(state.buffer, data);
             }
         }),
+    newLine: create.preparedReducer(
+        () => ({ payload: null }),
+        state => {
+            if (state.state !== 'open') {
+                throw Error("not an open buffer");
+            }
+            state.buffer = Buf.newLine(state.buffer);
+        }),
 
     deleteBackwards: create.preparedReducer(
         () => ({ payload: null }),

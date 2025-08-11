@@ -19,6 +19,7 @@ export interface EditorHandle {
     init(name: string): void;
 
     input(data: string): void;
+    newLine(): void;
 
     deleteBackwards(): void;
     deleteForwards(): void;
@@ -49,6 +50,7 @@ export const useEditor = (ref: Ref<EditorHandle>) => {
             init: compose(dispatch, actions.init),
 
             input: compose(dispatch, actions.input),
+            newLine: compose(dispatch, actions.newLine),
 
             deleteBackwards: compose(dispatch, actions.deleteBackwards),
             deleteForwards: compose(dispatch, actions.deleteForwards),

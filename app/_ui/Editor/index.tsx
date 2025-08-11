@@ -119,7 +119,15 @@ const Editor = () => {
     }, []);
 
     const inputAction = useCallback(async (data: string) => {
-        ref.current!.input(data);
+        let first = true;
+        for (const line of data.split('\n')) {
+            if (!first) {
+                // FIXME... simplify
+                ref.current!.newLine();
+            }
+            first = false;
+            ref.current!.input(line);
+        }
     }, []);
 
     const keyAction = useCallback((key: string, modifiers: Readonly<Modifiers>) => {

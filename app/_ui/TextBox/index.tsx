@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode, KeyboardEvent, InputEvent, Ref } from "react";
+import type { ReactNode, KeyboardEvent, Ref } from "react";
 import type Caret from "@/lib/Caret";
-import { useCallback, useImperativeHandle, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import styles from "./TextBox.module.css";
 
@@ -80,19 +80,47 @@ const Caret = ({
             ref.current!.focus();
         }
     }), []);
-    const onBeforeInput = useCallback((event: InputEvent<HTMLSpanElement>) => {
-        event.preventDefault();
-        inputAction?.(event.data);
-    }, [inputAction]);
     const onKeyDown = useCallback((event: KeyboardEvent<HTMLSpanElement>) => {
         const { shiftKey, altKey, ctrlKey, metaKey } = event;
         if (!keyAction?.(event.key, { shiftKey, altKey, metaKey, ctrlKey })) {
             event.preventDefault();
         }
     }, [keyAction]);
+
+    // React doesn't really give us enough control here unfortunately
+    // and just abuses TextEvent
+
+    // I think the caret trick doesn't really work and you need to
+    // just handle all the inputType events...
+    const onBeforeInput = useCallback((event: InputEvent) => {
+        //  https://w3c.github.io/input-event
+        event.preventDefault();
+        switch (event.inputType) {
+            case 'insertFromYank':
+            case 'insertFromDrop':
+            case 'insertFromPaste':
+            case 'insertText':
+                inputAction?.(event.data);
+                break;
+
+            case 'insertLineBreak':
+                inputAction?.(' ');
+                break;
+
+            default:
+                console.warn(`unhandled input event type ${event.inputType}`);
+                break;
+        }
+    }, [inputAction]);
+    useEffect(() => {
+        const aborter = new AbortController();
+        ref.current!.addEventListener('beforeinput', onBeforeInput, {
+            signal: aborter.signal
+        });
+        return () => aborter.abort();
+    }, [onBeforeInput]);
     return <span className={styles.caret} ref={ref}
        contentEditable={disabled ? undefined : "plaintext-only"}
-       onBeforeInput={onBeforeInput}
        onKeyDown={onKeyDown}
        onFocus={focusAction} onBlur={blurAction} />;
 };
