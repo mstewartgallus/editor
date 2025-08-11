@@ -91,7 +91,7 @@ const Caret = ({
         }
     }, [keyAction]);
     return <span className={styles.caret} ref={ref}
-       contentEditable={!disabled} suppressContentEditableWarning={true}
+       contentEditable={disabled ? undefined : "plaintext-only"}
        onBeforeInput={onBeforeInput}
        onKeyDown={onKeyDown}
        onFocus={focusAction} onBlur={blurAction} />;
